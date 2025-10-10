@@ -1,0 +1,393 @@
+---
+title: "Authentication"
+description: "Learn how to authenticate with the Journey API using passwordless login"
+---
+
+## Overview
+
+Journey API uses **session-based authentication** with passwordless login flows. Customers can log in using either SMS or email verification codes.
+
+<Info>
+API key authentication for programmatic access is planned for future releases.
+</Info>
+
+## Authentication Methods
+
+<CardGroup cols={2}>
+  <Card title="SMS Login" icon="mobile">
+    Send a verification code via SMS to the customer's phone number
+  </Card>
+  <Card title="Email Login" icon="envelope">
+    Send a magic link and code via email
+  </Card>
+</CardGroup>
+
+## SMS Login Flow
+
+<Steps>
+
+<Step title="Request SMS Code">
+
+Send a verification code to the customer's phone:
+
+```bash
+POST /api/v1/send-sms-code/
+```
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/send-sms-code/ \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "7771234"}'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.journey.io/api/v1/send-sms-code/",
+    json={"phone_number": "7771234"}
+)
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/send-sms-code/', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({phone_number: '7771234'})
+});
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "message": "SMS code sent successfully"
+}
+```
+
+</Step>
+
+<Step title="Submit Code">
+
+Authenticate with the code received via SMS:
+
+```bash
+POST /api/v1/login/sms/code/
+```
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/login/sms/code/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "7771234",
+    "code": "1337",
+    "login_type": "sms"
+  }'
+```
+
+```python Python
+response = requests.post(
+    "https://api.journey.io/api/v1/login/sms/code/",
+    json={
+        "phone_number": "7771234",
+        "code": "1337",
+        "login_type": "sms"
+    }
+)
+
+# Session cookie is automatically stored
+cookies = response.cookies
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/login/sms/code/', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  credentials: 'include', // Important: stores session cookie
+  body: JSON.stringify({
+    phone_number: '7771234',
+    code: '1337',
+    login_type: 'sms'
+  })
+});
+
+const data = await response.json();
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "customer": {
+    "id": 42,
+    "full_name": "Jón Jónsson",
+    "email": "jon@example.is",
+    "phone_number": "7771234"
+  },
+  "cookie": "session_key_value",
+  "user": {
+    "id": 42,
+    "username": "7771234",
+    "is_superuser": false,
+    "is_staff": false
+  }
+}
+```
+
+</Step>
+
+</Steps>
+
+## Email Login Flow
+
+<Steps>
+
+<Step title="Request Email Code">
+
+Send a verification code and magic link via email:
+
+```bash
+POST /api/v1/send-email-code/
+```
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/send-email-code/ \
+  -H "Content-Type: application/json" \
+  -d '{"email": "jon@example.is"}'
+```
+
+```python Python
+response = requests.post(
+    "https://api.journey.io/api/v1/send-email-code/",
+    json={"email": "jon@example.is"}
+)
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/send-email-code/', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({email: 'jon@example.is'})
+});
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "message": "Email code sent successfully"
+}
+```
+
+The email contains:
+- A 4-digit verification code
+- A magic link URL for one-click login
+
+</Step>
+
+<Step title="Submit Code or Use Magic Link">
+
+Either submit the code using the same SMS flow endpoint with `login_type: "email"`, or have the customer click the magic link in their email for automatic authentication.
+
+</Step>
+
+</Steps>
+
+## Check Authentication Status
+
+Verify if a session is authenticated:
+
+```bash
+GET /api/v1/auth/
+```
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.journey.io/api/v1/auth/ \
+  -H "Cookie: sessionid=your_session_id"
+```
+
+```python Python
+response = requests.get(
+    "https://api.journey.io/api/v1/auth/",
+    cookies={"sessionid": "your_session_id"}
+)
+
+if response.status_code == 200:
+    user = response.json()
+    print(f"Authenticated as: {user['user']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/auth/', {
+  credentials: 'include'
+});
+
+if (response.ok) {
+  const user = await response.json();
+  console.log(`Authenticated as: ${user.user}`);
+}
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "user": "7771234",
+  "id": 42,
+  "is_superuser": false,
+  "is_staff": false
+}
+```
+
+**Unauthenticated Response:**
+```json
+{
+  "detail": "Authentication credentials were not provided."
+}
+```
+
+## Session Management
+
+### Session Cookie
+
+After successful authentication, Journey sets an `httpOnly` session cookie named `sessionid`. This cookie must be included in all subsequent API requests.
+
+<Warning>
+Session cookies are `httpOnly` and `secure` in production, which means they cannot be accessed via JavaScript and are only sent over HTTPS.
+</Warning>
+
+### Session Duration
+
+Sessions expire after:
+- **30 days** of inactivity (default)
+- Explicit logout
+- Password/auth credential change
+
+### Multi-Device Sessions
+
+Customers can maintain multiple active sessions across different devices. Each device receives its own session cookie.
+
+## Using Sessions in Requests
+
+### Browser/Frontend
+
+When making requests from a browser, include `credentials: 'include'` to automatically send cookies:
+
+```javascript
+fetch('https://api.journey.io/api/v1/customer/42/', {
+  credentials: 'include'
+})
+```
+
+### Server-Side/Backend
+
+When making requests from a server, include the session cookie in the `Cookie` header:
+
+```python
+requests.get(
+    'https://api.journey.io/api/v1/customer/42/',
+    cookies={'sessionid': 'your_session_value'}
+)
+```
+
+## Legacy Authentication
+
+<Warning>
+The following endpoint is legacy and will be deprecated. Use the SMS code flow instead.
+</Warning>
+
+### Legacy Phone Login
+
+```bash
+POST /api/v1/phone/
+```
+
+This endpoint logs in a customer directly by phone number without code verification. It should only be used in controlled environments and will be removed in future versions.
+
+## Coming Soon: API Keys
+
+We're working on API key authentication for programmatic access. This will enable:
+
+- Server-to-server authentication
+- Scoped permissions (read-only, write, etc.)
+- Multiple keys per merchant
+- Key rotation and revocation
+
+<Card title="Stay Updated" icon="bell">
+  Contact support@journey.io to be notified when API key authentication becomes available.
+</Card>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always Use HTTPS" icon="lock">
+    Never send authentication credentials over unencrypted HTTP connections. Journey API enforces HTTPS in production.
+  </Accordion>
+
+  <Accordion title="Secure Session Storage" icon="shield">
+    Store session cookies securely. Never expose them in URLs, logs, or client-side JavaScript.
+  </Accordion>
+
+  <Accordion title="Implement Logout" icon="right-from-bracket">
+    Provide a way for customers to explicitly log out and invalidate their session.
+  </Accordion>
+
+  <Accordion title="Handle Expiration" icon="clock">
+    Gracefully handle session expiration by redirecting users to login when receiving 401/403 responses.
+  </Accordion>
+
+  <Accordion title="Rate Limiting" icon="gauge-high">
+    Implement rate limiting on your login endpoints to prevent brute force attacks on verification codes.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+### "Authentication credentials were not provided"
+
+This error occurs when:
+- No session cookie is included in the request
+- The session has expired
+- The session cookie is invalid
+
+**Solution:** Ensure the customer is logged in and the session cookie is being sent with requests.
+
+### "Invalid verification code"
+
+This error occurs when:
+- The code has expired (codes expire after 10 minutes)
+- The code is incorrect
+- The code has already been used
+
+**Solution:** Request a new code and try again.
+
+### Session Not Persisting
+
+If sessions aren't persisting across requests:
+- Verify `credentials: 'include'` is set (browser)
+- Check that cookies are being stored and sent
+- Ensure the domain matches (no cross-domain issues)
+- Verify CORS headers allow credentials
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Complete your first API integration
+  </Card>
+  <Card
+    title="Customer API"
+    icon="users"
+    href="/api/customers/list"
+  >
+    Learn about customer management
+  </Card>
+</CardGroup>

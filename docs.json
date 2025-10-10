@@ -1,68 +1,142 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Journey API Documentation",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#0EA5E9",
+    "light": "#38BDF8",
+    "dark": "#0284C7"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "authentication"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/multi-tenant",
+              "concepts/subscriptions",
+              "concepts/billing-dunning",
+              "concepts/delivery-fulfillment"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Integration Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "guides/insurance-integration",
+              "guides/saas-subscriptions",
+              "guides/ecommerce-subscriptions",
+              "guides/webhooks",
+              "guides/customer-portal"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Authentication",
             "pages": [
-              "api-reference/introduction"
+              "api/auth/send-sms-code",
+              "api/auth/send-email-code",
+              "api/auth/login-sms",
+              "api/auth/check-auth"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Customers",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/customers/list",
+              "api/customers/create",
+              "api/customers/get",
+              "api/customers/update",
+              "api/customers/delete",
+              "api/customers/subscriptions"
+            ]
+          },
+          {
+            "group": "Subscriptions",
+            "pages": [
+              "api/subscriptions/list",
+              "api/subscriptions/create",
+              "api/subscriptions/get",
+              "api/subscriptions/update",
+              "api/subscriptions/pause",
+              "api/subscriptions/resume",
+              "api/subscriptions/update-cart",
+              "api/subscriptions/update-frequency"
+            ]
+          },
+          {
+            "group": "Orders",
+            "pages": [
+              "api/orders/list",
+              "api/orders/create",
+              "api/orders/get",
+              "api/orders/update"
+            ]
+          },
+          {
+            "group": "Payments",
+            "pages": [
+              "api/payments/overview",
+              "api/payments/settle-balance",
+              "api/payments/payment-methods"
+            ]
+          },
+          {
+            "group": "Payment Providers",
+            "pages": [
+              "api/providers/rapyd",
+              "api/providers/reepay",
+              "api/providers/straumur"
+            ]
+          },
+          {
+            "group": "Deliveries",
+            "pages": [
+              "api/deliveries/list",
+              "api/deliveries/get",
+              "api/deliveries/update",
+              "api/deliveries/options",
+              "api/deliveries/schedules"
+            ]
+          },
+          {
+            "group": "Products & Inventory",
+            "pages": [
+              "api/products/list",
+              "api/products/get",
+              "api/products/variations",
+              "api/products/stock"
+            ]
+          },
+          {
+            "group": "Coupons",
+            "pages": [
+              "api/coupons/list",
+              "api/coupons/create",
+              "api/coupons/get",
+              "api/coupons/update",
+              "api/coupons/delete"
+            ]
+          },
+          {
+            "group": "Merchant",
+            "pages": [
+              "api/merchant/get",
+              "api/merchant/frequencies"
             ]
           }
         ]
@@ -71,14 +145,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "API Status",
+          "href": "https://status.journey.io",
+          "icon": "signal"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Support",
+          "href": "mailto:support@journey.io",
+          "icon": "envelope"
         }
       ]
     }
@@ -90,14 +164,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "Dashboard",
+        "href": "https://dashboard.journey.io"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Get API Key",
+      "href": "https://dashboard.journey.io/settings/api-keys"
     }
   },
   "contextual": {
@@ -114,9 +188,15 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/getjourney",
+      "github": "https://github.com/getjourney",
+      "linkedin": "https://linkedin.com/company/getjourney"
+    }
+  },
+  "api": {
+    "baseUrl": "https://api.journey.io",
+    "playground": {
+      "mode": "simple"
     }
   }
 }

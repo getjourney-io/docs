@@ -1,80 +1,451 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quickstart Guide"
+description: "Get started with the Journey API in 5 minutes"
 ---
 
-## Get started in three steps
+<Info>
+  **Prerequisites:**
+  - API access credentials (contact support@journey.io)
+  - A test merchant account
+  - Basic understanding of REST APIs
+</Info>
 
-Get your documentation site running locally and make your first customization.
+## Complete Subscription Flow
 
-### Step 1: Set up your local environment
+This guide walks you through creating a complete subscription from scratch, including customer creation, payment method setup, and subscription activation.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
 
-### Step 2: Deploy your changes
+<Step title="Create a Customer">
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+First, create a customer account:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/customer/ \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sessionid=your_session_id" \
+  -d '{
+    "full_name": "Jón Jónsson",
+    "email": "jon@example.is",
+    "phone_number": "7771234",
+    "address": "Laugavegur 1",
+    "postal_code": "101",
+    "city": "Reykjavík"
+  }'
+```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```python Python
+import requests
 
-### Step 3: Go live
+response = requests.post(
+    "https://api.journey.io/api/v1/customer/",
+    headers={"Content-Type": "application/json"},
+    cookies={"sessionid": "your_session_id"},
+    json={
+        "full_name": "Jón Jónsson",
+        "email": "jon@example.is",
+        "phone_number": "7771234",
+        "address": "Laugavegur 1",
+        "postal_code": "101",
+        "city": "Reykjavík"
+    }
+)
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+customer = response.json()
+customer_id = customer["id"]
+```
 
-## Next steps
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/customer/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Cookie': 'sessionid=your_session_id'
+  },
+  body: JSON.stringify({
+    full_name: 'Jón Jónsson',
+    email: 'jon@example.is',
+    phone_number: '7771234',
+    address: 'Laugavegur 1',
+    postal_code: '101',
+    city: 'Reykjavík'
+  })
+});
 
-Now that you have your docs running, explore these key features:
+const customer = await response.json();
+const customerId = customer.id;
+```
+
+```php PHP
+<?php
+$curl = curl_init();
+
+curl_setopt_array($curl, [
+  CURLOPT_URL => "https://api.journey.io/api/v1/customer/",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_POST => true,
+  CURLOPT_HTTPHEADER => [
+    "Content-Type: application/json",
+    "Cookie: sessionid=your_session_id"
+  ],
+  CURLOPT_POSTFIELDS => json_encode([
+    "full_name" => "Jón Jónsson",
+    "email" => "jon@example.is",
+    "phone_number" => "7771234",
+    "address" => "Laugavegur 1",
+    "postal_code" => "101",
+    "city" => "Reykjavík"
+  ])
+]);
+
+$response = curl_exec($curl);
+$customer = json_decode($response, true);
+$customerId = $customer["id"];
+?>
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "id": 42,
+  "customer_handle": "cust-journey-42",
+  "full_name": "Jón Jónsson",
+  "email": "jon@example.is",
+  "phone_number": "7771234",
+  "address": "Laugavegur 1",
+  "postal_code": "101",
+  "city": "Reykjavík",
+  "date_time": "2025-10-09T14:23:45Z"
+}
+```
+
+</Step>
+
+<Step title="Add Payment Method">
+
+Create a Straumur checkout session to add a payment card:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/straumur/create-session-add-card/ \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sessionid=your_session_id" \
+  -d '{
+    "customer_id": 42,
+    "return_url": "https://yoursite.com/payment-complete"
+  }'
+```
+
+```python Python
+response = requests.post(
+    "https://api.journey.io/api/v1/straumur/create-session-add-card/",
+    headers={"Content-Type": "application/json"},
+    cookies={"sessionid": "your_session_id"},
+    json={
+        "customer_id": 42,
+        "return_url": "https://yoursite.com/payment-complete"
+    }
+)
+
+session = response.json()
+checkout_url = session["checkoutUrl"]
+# Redirect customer to checkout_url
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/straumur/create-session-add-card/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Cookie': 'sessionid=your_session_id'
+  },
+  body: JSON.stringify({
+    customer_id: 42,
+    return_url: 'https://yoursite.com/payment-complete'
+  })
+});
+
+const session = await response.json();
+// Redirect customer to session.checkoutUrl
+window.location.href = session.checkoutUrl;
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "checkoutUrl": "https://pay.straumur.is/checkout/xyz123",
+  "uuid": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+Redirect your customer to the `checkoutUrl` to complete card verification.
+
+</Step>
+
+<Step title="Create Subscription">
+
+After the payment method is added, create a subscription:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/subscription/ \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sessionid=your_session_id" \
+  -d '{
+    "customer_id": 42,
+    "subscription_status": "active",
+    "delivery_option_id": 3,
+    "start_date": "2025-11-01"
+  }'
+```
+
+```python Python
+response = requests.post(
+    "https://api.journey.io/api/v1/subscription/",
+    headers={"Content-Type": "application/json"},
+    cookies={"sessionid": "your_session_id"},
+    json={
+        "customer_id": 42,
+        "subscription_status": "active",
+        "delivery_option_id": 3,
+        "start_date": "2025-11-01"
+    }
+)
+
+subscription = response.json()
+subscription_id = subscription["id"]
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/subscription/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Cookie': 'sessionid=your_session_id'
+  },
+  body: JSON.stringify({
+    customer_id: 42,
+    subscription_status: 'active',
+    delivery_option_id: 3,
+    start_date: '2025-11-01'
+  })
+});
+
+const subscription = await response.json();
+const subscriptionId = subscription.id;
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "id": 789,
+  "customer_id": 42,
+  "subscription_status": "active",
+  "start_date": "2025-11-01",
+  "delivery_option_id": 3,
+  "created": "2025-10-09T14:30:00Z"
+}
+```
+
+</Step>
+
+<Step title="Add Items to Subscription">
+
+Add products to the subscription cart:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.journey.io/api/v1/subscription/789/update_cart/ \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sessionid=your_session_id" \
+  -d '{
+    "order_items": [
+      {
+        "product_variation_id": 5,
+        "quantity": 2,
+        "subscription_frequency_id": 2
+      }
+    ]
+  }'
+```
+
+```python Python
+response = requests.post(
+    "https://api.journey.io/api/v1/subscription/789/update_cart/",
+    headers={"Content-Type": "application/json"},
+    cookies={"sessionid": "your_session_id"},
+    json={
+        "order_items": [
+            {
+                "product_variation_id": 5,
+                "quantity": 2,
+                "subscription_frequency_id": 2
+            }
+        ]
+    }
+)
+
+updated_subscription = response.json()
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/subscription/789/update_cart/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Cookie': 'sessionid=your_session_id'
+  },
+  body: JSON.stringify({
+    order_items: [
+      {
+        product_variation_id: 5,
+        quantity: 2,
+        subscription_frequency_id: 2
+      }
+    ]
+  })
+});
+
+const updatedSubscription = await response.json();
+```
+</CodeGroup>
+
+**Response:**
+```json
+{
+  "id": 789,
+  "customer_id": 42,
+  "subscription_status": "active",
+  "order_items": [
+    {
+      "id": 101,
+      "product_variation_id": 5,
+      "quantity": 2,
+      "subscription_frequency_id": 2
+    }
+  ]
+}
+```
+
+</Step>
+
+<Step title="Verify Subscription">
+
+Retrieve the subscription to confirm everything is set up correctly:
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.journey.io/api/v1/subscription/789/ \
+  -H "Cookie: sessionid=your_session_id"
+```
+
+```python Python
+response = requests.get(
+    "https://api.journey.io/api/v1/subscription/789/",
+    cookies={"sessionid": "your_session_id"}
+)
+
+subscription = response.json()
+print(f"Status: {subscription['subscription_status']}")
+print(f"Items: {len(subscription['order_items'])}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/subscription/789/', {
+  headers: {
+    'Cookie': 'sessionid=your_session_id'
+  }
+});
+
+const subscription = await response.json();
+console.log(`Status: ${subscription.subscription_status}`);
+console.log(`Items: ${subscription.order_items.length}`);
+```
+</CodeGroup>
+
+</Step>
+
+</Steps>
+
+## What Happens Next?
+
+Once your subscription is active, Journey automatically:
+
+1. **Generates Deliveries** - Creates delivery records based on your subscription frequency
+2. **Processes Payments** - Charges the customer's payment method before each delivery
+3. **Handles Failures** - Automatically retries failed payments using dunning logic
+4. **Sends Notifications** - Triggers email/SMS events for payment confirmations and delivery updates
+
+## Next Steps
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/authentication"
+  >
+    Learn about customer login flows
+  </Card>
+  <Card
+    title="Subscriptions Guide"
+    icon="repeat"
+    href="/concepts/subscriptions"
+  >
+    Deep dive into subscription management
+  </Card>
+  <Card
+    title="Billing & Dunning"
+    icon="credit-card"
+    href="/concepts/billing-dunning"
+  >
+    Understand automatic payment retries
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api/customers/list"
+  >
+    Explore all API endpoints
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Common Operations
+
+### Pause a Subscription
+
+```bash
+curl -X POST https://api.journey.io/api/v1/subscription/789/pause/ \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sessionid=your_session_id" \
+  -d '{"reason": "Customer going on vacation"}'
+```
+
+### Resume a Subscription
+
+```bash
+curl -X POST https://api.journey.io/api/v1/subscription/789/resume/ \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sessionid=your_session_id" \
+  -d '{"coupon_code": "WELCOME10"}'
+```
+
+### List Customer Subscriptions
+
+```bash
+curl -X GET https://api.journey.io/api/v1/customer/42/subscriptions/ \
+  -H "Cookie: sessionid=your_session_id"
+```
+
+## Testing
+
+Use the staging environment for testing:
+
+```bash
+https://staging-api.journey.io
+```
+
+All test data is isolated from production, and you can reset your test environment at any time.

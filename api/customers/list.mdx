@@ -1,0 +1,349 @@
+---
+title: "List Customers"
+description: "Retrieve a list of all customers for your merchant"
+api: "GET /api/v1/customer/"
+---
+
+## Endpoint
+
+```
+GET /api/v1/customer/
+```
+
+Returns a list of all customer objects for the authenticated merchant.
+
+<Warning>
+This endpoint returns all customers without pagination. For merchants with large customer bases, pagination support is planned for future releases.
+</Warning>
+
+## Authentication
+
+<ParamField header="Cookie" type="string" required>
+  Session cookie obtained from authentication
+</ParamField>
+
+## Query Parameters
+
+<Info>
+Query parameters for filtering are not currently supported but are planned for future releases. See the [proposed enhancements](#coming-soon) below.
+</Info>
+
+## Response
+
+<ResponseField name="customers" type="array">
+  Array of customer objects
+
+  <Expandable title="Customer Object">
+    <ResponseField name="id" type="integer">
+      Unique customer identifier
+    </ResponseField>
+
+    <ResponseField name="customer_handle" type="string">
+      Auto-generated unique handle (format: `cust-journey-{id}`)
+    </ResponseField>
+
+    <ResponseField name="full_name" type="string">
+      Customer's full name
+    </ResponseField>
+
+    <ResponseField name="email" type="string">
+      Customer's email address
+    </ResponseField>
+
+    <ResponseField name="phone_number" type="string">
+      Customer's phone number
+    </ResponseField>
+
+    <ResponseField name="address" type="string">
+      Street address
+    </ResponseField>
+
+    <ResponseField name="address2" type="string">
+      Additional address line (optional)
+    </ResponseField>
+
+    <ResponseField name="postal_code" type="string">
+      Postal/ZIP code
+    </ResponseField>
+
+    <ResponseField name="city" type="string">
+      City name
+    </ResponseField>
+
+    <ResponseField name="social_security_number" type="string">
+      Customer's SSN (if applicable)
+    </ResponseField>
+
+    <ResponseField name="company_name" type="string">
+      Company name for business customers
+    </ResponseField>
+
+    <ResponseField name="invoice_notes" type="string">
+      Custom notes for invoicing
+    </ResponseField>
+
+    <ResponseField name="delivery_detail" type="string">
+      Delivery instructions
+    </ResponseField>
+
+    <ResponseField name="pickAndPack_notes" type="string">
+      Fulfillment packing notes
+    </ResponseField>
+
+    <ResponseField name="auto_send_invoices" type="boolean">
+      Whether invoices are automatically sent to customer
+    </ResponseField>
+
+    <ResponseField name="date_time" type="string">
+      ISO 8601 timestamp of customer creation
+    </ResponseField>
+
+    <ResponseField name="merchant_id" type="integer">
+      The merchant this customer belongs to
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.journey.io/api/v1/customer/ \
+  -H "Cookie: sessionid=your_session_id"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.journey.io/api/v1/customer/",
+    cookies={"sessionid": "your_session_id"}
+)
+
+customers = response.json()
+print(f"Total customers: {len(customers)}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.journey.io/api/v1/customer/', {
+  credentials: 'include'
+});
+
+const customers = await response.json();
+console.log(`Total customers: ${customers.length}`);
+```
+
+```php PHP
+<?php
+$curl = curl_init();
+
+curl_setopt_array($curl, [
+  CURLOPT_URL => "https://api.journey.io/api/v1/customer/",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HTTPHEADER => [
+    "Cookie: sessionid=your_session_id"
+  ]
+]);
+
+$response = curl_exec($curl);
+$customers = json_decode($response, true);
+echo "Total customers: " . count($customers);
+?>
+```
+</CodeGroup>
+
+## Response Example
+
+```json
+[
+  {
+    "id": 42,
+    "customer_handle": "cust-journey-42",
+    "full_name": "Jón Jónsson",
+    "email": "jon@example.is",
+    "phone_number": "7771234",
+    "address": "Laugavegur 1",
+    "address2": "",
+    "postal_code": "101",
+    "city": "Reykjavík",
+    "social_security_number": "010190-1234",
+    "company_name": "",
+    "invoice_notes": "",
+    "delivery_detail": "Ring doorbell",
+    "pickAndPack_notes": "",
+    "auto_send_invoices": false,
+    "date_time": "2025-10-09T14:23:45Z",
+    "merchant_id": 1
+  },
+  {
+    "id": 43,
+    "customer_handle": "cust-journey-43",
+    "full_name": "Anna Sigurðardóttir",
+    "email": "anna@example.is",
+    "phone_number": "7775678",
+    "address": "Hverfisgata 12",
+    "address2": "Apt 4B",
+    "postal_code": "101",
+    "city": "Reykjavík",
+    "social_security_number": "150285-2345",
+    "company_name": "Example Ltd",
+    "invoice_notes": "Net 30 terms",
+    "delivery_detail": "Leave at reception",
+    "pickAndPack_notes": "Fragile items",
+    "auto_send_invoices": true,
+    "date_time": "2025-10-08T10:15:30Z",
+    "merchant_id": 1
+  }
+]
+```
+
+## Error Responses
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized">
+    ```json
+    {
+      "detail": "Authentication credentials were not provided."
+    }
+    ```
+
+    **Cause:** No valid session cookie provided
+
+    **Solution:** Ensure the customer is authenticated and session cookie is included
+  </Accordion>
+
+  <Accordion title="403 Forbidden">
+    ```json
+    {
+      "detail": "You do not have permission to perform this action."
+    }
+    ```
+
+    **Cause:** Session valid but user doesn't have required permissions
+
+    **Solution:** Verify the user has appropriate access rights
+  </Accordion>
+</AccordionGroup>
+
+## Use Cases
+
+### Display Customer List
+
+```javascript
+async function fetchCustomers() {
+  const response = await fetch('https://api.journey.io/api/v1/customer/', {
+    credentials: 'include'
+  });
+
+  const customers = await response.json();
+
+  // Display in table
+  customers.forEach(customer => {
+    console.log(`${customer.full_name} (${customer.email})`);
+  });
+}
+```
+
+### Search by Email (Client-Side)
+
+Since server-side filtering isn't available yet, you can filter results client-side:
+
+```python
+def find_customer_by_email(email):
+    response = requests.get(
+        "https://api.journey.io/api/v1/customer/",
+        cookies={"sessionid": session_id}
+    )
+
+    customers = response.json()
+
+    # Client-side filtering
+    matches = [c for c in customers if c['email'].lower() == email.lower()]
+    return matches[0] if matches else None
+```
+
+### Export to CSV
+
+```python
+import csv
+
+response = requests.get(
+    "https://api.journey.io/api/v1/customer/",
+    cookies={"sessionid": session_id}
+)
+
+customers = response.json()
+
+with open('customers.csv', 'w', newline='') as csvfile:
+    fieldnames = ['id', 'full_name', 'email', 'phone_number', 'city']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    writer.writeheader()
+    for customer in customers:
+        writer.writerow({k: customer.get(k) for k in fieldnames})
+```
+
+## Coming Soon
+
+<Warning>
+⚠️ **Proposed Enhancements** - Not yet implemented
+</Warning>
+
+The following query parameters are planned for future releases:
+
+<ParamField query="search" type="string">
+  Search customers by name, email, or phone number
+</ParamField>
+
+<ParamField query="city" type="string">
+  Filter by city
+</ParamField>
+
+<ParamField query="postal_code" type="string">
+  Filter by postal code
+</ParamField>
+
+<ParamField query="has_active_subscription" type="boolean">
+  Filter customers with active subscriptions
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of results per page (pagination)
+</ParamField>
+
+<ParamField query="offset" type="integer">
+  Offset for pagination
+</ParamField>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card
+    title="Create Customer"
+    icon="plus"
+    href="/api/customers/create"
+  >
+    Create a new customer account
+  </Card>
+  <Card
+    title="Get Customer"
+    icon="user"
+    href="/api/customers/get"
+  >
+    Retrieve a specific customer by ID
+  </Card>
+  <Card
+    title="Update Customer"
+    icon="pen"
+    href="/api/customers/update"
+  >
+    Modify customer information
+  </Card>
+  <Card
+    title="Customer Subscriptions"
+    icon="repeat"
+    href="/api/customers/subscriptions"
+  >
+    List all subscriptions for a customer
+  </Card>
+</CardGroup>
