@@ -26,6 +26,7 @@
             "pages": [
               "concepts/multi-tenant",
               "concepts/subscriptions",
+              "concepts/communication",
               "concepts/billing-dunning",
               "concepts/delivery-fulfillment"
             ]
