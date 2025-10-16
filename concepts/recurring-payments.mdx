@@ -13,7 +13,7 @@ description: "Automated subscription billing with intelligent retry logic, multi
 
 ## How Recurring Payments Work
 
-Journey's billing system operates on a delivery-centric model where payments are tied to delivery dates:
+Journey's billing system operates on a delivery-centric model where payments are tied to delivery or charge dates:
 
 <Steps>
 <Step title="Subscription Created">
@@ -25,11 +25,11 @@ System creates orders from subscription recipe based on item frequencies
 </Step>
 
 <Step title="Deliveries Scheduled">
-Each order gets a delivery date (which is also the charge date)
+Each order gets a delivery or charge date (depending on whether the merchant is uses physical products or not)
 </Step>
 
 <Step title="Automated Charging">
-On delivery date, system automatically charges the customer's payment method
+On delivery/charge date, system automatically charges the customer's payment method
 </Step>
 
 <Step title="Status Updates">
@@ -45,7 +45,7 @@ Failed payments trigger automatic retry sequences with customer notifications
 
 ```mermaid
 graph TD
-    A[Delivery Date Arrives] -->|Midnight Cron| B[Create Payment Object]
+    A[Delivery/Charge Date Arrives] -->|Midnight Cron| B[Create Payment Object]
     B --> C{Payment Method Valid?}
     C -->|Yes| D[Charge Payment Processor]
     C -->|No| E[Mark as Failed]
@@ -82,7 +82,7 @@ graph LR
 
 <AccordionGroup>
   <Accordion title="New Charge" icon="plus">
-    Payment object created but not yet attempted. Occurs when delivery date arrives and system creates initial payment record.
+    Payment object created but not yet attempted. Occurs when delivery/charge date arrives and system creates initial payment record.
 
     **Next Step:** Immediate charge attempt via payment processor
   </Accordion>
