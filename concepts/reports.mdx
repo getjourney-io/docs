@@ -465,70 +465,7 @@ This report:
 
 ## Technical Architecture
 
-<Tabs>
-<Tab title="Data Flow">
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant R as Reports UI
-    participant A as Actions API
-    participant D as Database
-
-    U->>R: Select Report
-    R->>A: getReportsData(index, fromDate, toDate)
-    A->>D: Execute SQL Query (tenant context)
-    D-->>A: Return Rows
-    A-->>R: Format Results
-    R->>U: Display Table Preview
-    U->>R: Click Export
-    R->>U: Download Excel File
-```
-
-</Tab>
-
-<Tab title="Tech Stack">
-
-**Frontend:**
-- **React Query**: Data fetching and caching
-- **Tremor UI**: Date range picker component
-- **Radix UI**: Accordion navigation
-- **Excel.js**: Client-side Excel generation
-
-**Backend:**
-- **SQL Template Tags**: Parameterized query construction
-- **Multi-Tenant Context**: Automatic schema isolation
-- **Drizzle ORM**: Type-safe database queries
-
-**Query Execution:**
-```typescript
-// Type-safe query with automatic tenant isolation
-const result = await query<ReportData>(
-  sql`SELECT * FROM order_subscription WHERE ...`
-)
-```
-
-</Tab>
-
-<Tab title="Performance">
-
-**Caching Strategy:**
-- Report metadata (`getReportsOverview`) cached indefinitely
-- Report data (`getReportsData`) cached per report + date range
-- React Query automatically deduplicates concurrent requests
-
-**Query Optimization:**
-- All date columns indexed for fast filtering
-- Aggregate queries use database-level grouping
-- Large datasets stream to Excel without memory overflow
-
-**Scalability:**
-- Queries execute per tenant (smaller datasets)
-- No cross-tenant joins (maintains performance)
-- Date range limits prevent unbounded queries
-
-</Tab>
-</Tabs>
+Temporarily removed for debugging.
 
 ## Analytics Snapshots
 
@@ -674,8 +611,8 @@ def stats_per_tenant(tenant):
 - Use clear column names that make sense in Excel exports
 - Provide descriptions explaining report purpose and use cases
 
-**Performance:**
-- Target <2 second query execution time
+- **Performance:**
+- Target &lt;2 second query execution time
 - Show loading states for long-running queries
 - Consider pagination for reports with 10,000+ rows
 - Cache results when data doesn't change frequently
