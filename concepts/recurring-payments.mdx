@@ -262,20 +262,26 @@ Journey supports multiple payment processors with unified API:
 
 ### Processor Selection
 
-Journey automatically selects the processor based on:
-1. **Customer location** - Straumur for Iceland, Reepay for Europe
-2. **Subscription configuration** - Processor assigned at subscription level
-3. **Fallback hierarchy** - Merchant default if not specified
+Journey **doesn't automatically select the payment processor**. Instead, it provides flexibility for merchants to configure which processor to use based on their business needs.
 
-```python
-# Processor priority
-if subscription.payment_processor_id:
-    use_processor = subscription.payment_processor_id
-elif customer.preferred_processor:
-    use_processor = customer.preferred_processor
-else:
-    use_processor = merchant.default_payment_processor_id
-```
+**Configuration Options:**
+1. **Per-Subscription Level** - Assign specific processor when creating subscription
+2. **Per-Customer Level** - Set preferred processor for customer's payment methods
+3. **Multiple Processors** - Journey supports running multiple payment processors simultaneously, allowing you to:
+   - Test new processors without migrating existing customers
+   - Offer region-specific payment options
+   - Segment customers by processor (e.g., B2B vs B2C)
+   - Gradually migrate between processors
+
+**Selection Priority:**
+The system checks for a processor in this order:
+1. Processor explicitly assigned to the subscription
+2. Customer's preferred processor (from their payment method)
+3. Merchant's default payment processor
+
+<Info>
+You can have multiple payment processors active at the same time. For example, use Straumur for Icelandic customers and Reepay for international customers within the same merchant account.
+</Info>
 
 <Warning>
 Once a subscription starts with a processor, changing processors mid-cycle requires customer re-verification and may interrupt service.
@@ -283,121 +289,65 @@ Once a subscription starts with a processor, changing processors mid-cycle requi
 
 ## Automated Billing Cron
 
-Journey runs daily billing automation at midnight:
-
-```bash
-python manage.py payment_for_delivery
-```
+Journey runs daily billing automation to handle recurring payment processing automatically.
 
 ### Cron Job Workflow
 
+The system performs several key operations each day:
+
 <Steps>
 <Step title="Process New Deliveries">
-Find deliveries whose `delivery_date` matches today:
-
-```python
-deliveries = delivery.objects.filter(
-    delivery_date__date=today,
-    cancelled=False,
-    order_id__payment_id__isnull=True
-)
-
-for delivery_item in deliveries:
-    create_payment_and_charge(delivery_item)
-```
+The system identifies deliveries scheduled for today that haven't been charged yet. For each eligible delivery:
+- Creates a payment record
+- Charges the customer's payment method
+- Updates subscription status based on payment result
 
 **Result:** New charges processed for today's deliveries
 </Step>
 
 <Step title="Capture Authorized Payments">
-Find payments in `authorized` state ready for capture:
+For payment processors that use two-step authorization (authorize → capture), the system finds payments that were pre-authorized and are now ready to be captured when their delivery date arrives.
 
-```python
-authorized_payments = payment.objects.filter(
-    payment_status=PaymentStatus.AUTHORIZED,
-    delivery__delivery_date__date=today
-)
-
-for payment in authorized_payments:
-    capture_payment(payment)
-```
-
-**Result:** Pre-authorized payments captured
+**Result:** Pre-authorized payments captured and funds transferred
 </Step>
 
 <Step title="Retry Failed Payments">
-Process past_due subscriptions within retry window:
+The system identifies subscriptions with failed payments that are eligible for retry (within the configured retry window and daily retry limit). Each payment is attempted once per day.
 
-```python
-failed_payments = payment.objects.filter(
-    payment_status=PaymentStatus.FAILED,
-    subscription__subscription_status=SubscriptionStatusChoices.PAST_DUE,
-    settling_attempts__lt=20  # Max retry limit
-)
-
-for payment in failed_payments:
-    if not already_retried_today(payment):
-        retry_payment(payment)
-```
-
-**Result:** Daily retry attempts for recoverable failures
+**Result:** Daily retry attempts for recoverable payment failures
 </Step>
 
 <Step title="Cancel Old Failed Payments">
-Cancel payments that have exceeded retry window:
+Payments that have exceeded the maximum retry period (typically 20 days) are automatically cancelled. The associated subscriptions are expired and future deliveries are cancelled.
 
-```python
-old_failures = payment.objects.filter(
-    payment_status=PaymentStatus.FAILED,
-    created__lt=today - timedelta(days=20)
-)
-
-for payment in old_failures:
-    cancel_payment_and_expire_subscription(payment)
-```
-
-**Result:** Expired subscriptions and cancelled deliveries
+**Result:** Expired subscriptions and cancelled deliveries for unrecoverable payments
 </Step>
 
 <Step title="Send Dunning Communications">
-Trigger customer notifications based on payment status:
+Customer notifications are triggered based on payment attempt counts:
+- First failure: Friendly reminder
+- Every 4th attempt: Urgent reminder with days remaining
+- Final attempt: Last chance notice
+- After expiration: Subscription cancelled notice
 
-```python
-# First failure
-if payment.settling_attempts == 1:
-    send_past_due_email()
-
-# Every 4th attempt
-if payment.settling_attempts % 4 == 0:
-    send_urgent_reminder()
-
-# Final notice
-if payment.settling_attempts == 20:
-    send_final_notice()
-```
-
-**Result:** Automated customer communication
+**Result:** Automated customer communication throughout the dunning process
 </Step>
 </Steps>
 
-### Cron Configuration
+### Monitoring
 
-**Recommended Schedule:**
-```cron
-0 0 * * * python manage.py payment_for_delivery
-```
+Journey provides comprehensive monitoring of the automated billing process:
 
-**Monitoring:**
-```bash
-# Check last run
-tail -f /var/log/cron.log
+**Logging:**
+- All cron job executions are logged with timestamps and results
+- Errors are captured with full context for debugging
+- Processing summaries show counts of payments processed, retries attempted, and subscriptions updated
 
-# Monitor Sentry for errors
-# Alerts configured for:
-# - Payment processor failures
-# - High retry rates
-# - Authorization declines
-```
+**Alerts:**
+- Payment processor failures trigger immediate alerts
+- Unusually high retry rates indicate potential issues
+- Authorization decline spikes warrant investigation
+- Processing time exceeding thresholds
 
 ## Payment Retry Logic
 
@@ -484,24 +434,22 @@ Customers can update payment methods at any time during the retry period. The ne
 
 ### Retry Prevention
 
-Journey prevents multiple retries per day:
+Journey implements safeguards to prevent excessive retry attempts:
 
-```python
-def check_payment_attempt_already_happened_today(payment):
-    """Ensures one retry per 24 hours"""
-    is_before_8am = timezone.now().hour < 8
+**Daily Limit:** Only one retry attempt per payment per day
+- Prevents rapid-fire retry attempts that could trigger fraud detection
+- Reduces payment processor fees from multiple failed attempts
+- Gives customers time to resolve underlying issues (add funds, update card, etc.)
 
-    if is_before_8am:
-        return True  # Skip early morning
+**Time Window:** Retries only occur after 8 AM local time
+- Avoids charging customers during overnight hours
+- Aligns with business hours when customers can respond
+- Reduces customer support inquiries about unexpected charges
 
-    last_attempt_date = payment.last_attempt.date()
-    today = timezone.now().date()
-
-    if last_attempt_date == today:
-        return True  # Already tried today
-
-    return False  # OK to retry
-```
+**Already Attempted Check:** System tracks the last attempt timestamp
+- Skips retry if already attempted today
+- Prevents duplicate charges if cron job runs multiple times
+- Ensures predictable billing behavior for customers
 
 ## Payment Method Management
 
@@ -562,57 +510,40 @@ customer.save()
 
 **Scenario:** Payment fails, customer updates card while in retry period.
 
-**Journey's Behavior:**
-1. Customer adds new payment method
-2. New card becomes `primary_payment_method`
-3. Next retry (could be hours later) uses new card automatically
-4. If successful, subscription returns to `active` immediately
-5. No missed deliveries or service interruption
+**Journey's Seamless Recovery:**
+1. Customer adds new payment method through the customer portal
+2. New card is automatically set as their primary payment method
+3. The very next retry attempt (could be within hours) uses the new card
+4. If the new card charges successfully, subscription immediately returns to active status
+5. Customer experiences no service interruption or missed deliveries
 
-```python
-# Next billing attempt
-latest_payment_method = customer.primary_payment_method
-response = charge(
-    payment_method=latest_payment_method,  # New card used automatically
-    amount=calculate_total(order)
-)
-
-if response.success:
-    subscription.subscription_status = "active"  # Recovered!
-```
+**Behind the Scenes:**
+- System always uses the customer's current primary payment method for retry attempts
+- No manual intervention needed from support or merchant
+- Subscription status updates automatically based on payment success
+- Delivery schedules remain intact if payment recovered within retry window
 
 <Tip>
-This seamless recovery is a key feature - customers can fix payment issues without contacting support or missing deliveries.
+This seamless recovery is a key feature - customers can fix payment issues without contacting support or missing deliveries. The system is designed to "just work" when customers update their payment information.
 </Tip>
 
 ## Refunds and Adjustments
 
 ### Full Refund
 
-```python
-# Refund entire payment
-refund_response = refund_payment(
-    payment_object=payment,
-    amount=None  # None = full refund
-)
-
-if refund_response['success']:
-    payment.payment_status = PaymentStatus.REFUNDED
-    payment.save()
-```
+**Process:**
+- Merchant initiates refund for the entire payment amount
+- System calls the payment processor's refund API
+- If successful, payment status updates to `REFUNDED`
+- Customer receives credit to their original payment method
 
 ### Partial Refund
 
-```python
-# Refund specific amount (e.g., damaged item)
-refund_response = refund_payment(
-    payment_object=payment,
-    amount=1500  # 1500 ISK
-)
-
-payment.refund_amount = 1500
-payment.save()
-```
+**Process:**
+- Merchant specifies a specific amount to refund (e.g., for a damaged item)
+- System calls processor API with the partial amount
+- Refund amount is tracked separately from original payment amount
+- Customer receives partial credit while payment remains in their history
 
 ### Refund Timeline
 
@@ -679,22 +610,20 @@ Journey automatically generates invoices for every successful payment.
 
 ### Auto-Send Invoices
 
-Enable automatic invoice delivery per customer:
+Enable automatic invoice delivery per customer through their account settings. When enabled:
 
-```python
-customer.auto_send_invoices = True
-customer.save()
+**Trigger:** After every successful payment settlement
 
-# After payment settles
-if customer.auto_send_invoices:
-    send_invoice_email(payment)
-```
-
-**Email includes:**
-- PDF attachment
+**Email Contents:**
+- PDF invoice attachment
 - HTML summary in email body
-- Payment confirmation
-- Next billing date
+- Payment confirmation details
+- Next billing date information
+
+**Configuration:**
+- Enabled per-customer (not global)
+- Can be toggled on/off at any time
+- Immediate effect on next payment
 
 ## Stock Management Integration
 
@@ -704,36 +633,31 @@ Journey integrates payment status with stock management:
 
 <Steps>
 <Step title="Order Created">
-```python
-# Check availability
-availability = check_stock_availability_for_order(order)
-if not availability['all_available']:
-    return JsonResponse({"error": "Out of stock"})
-```
+**Stock Availability Check:**
+- System verifies all items are in stock before creating order
+- If any item is unavailable, order creation fails
+- Prevents overselling and customer disappointment
 </Step>
 
 <Step title="Payment Authorized">
-```python
-# Reserve stock when payment authorized
-if payment.payment_status == PaymentStatus.AUTHORIZED:
-    reserve_stock_for_order(order)
-```
+**Stock Reservation:**
+- When payment is pre-authorized, stock is reserved for this order
+- Reserved stock is temporarily unavailable to other customers
+- Ensures items will be available when payment captures
 </Step>
 
 <Step title="Payment Settled">
-```python
-# Fulfill order (reduce stock permanently)
-if payment.payment_status == PaymentStatus.SETTLED:
-    fulfill_order(order)
-```
+**Stock Fulfillment:**
+- Once payment fully settles, stock is permanently reduced
+- Reservation is removed (no longer needed)
+- Order moves to fulfillment queue
 </Step>
 
 <Step title="Payment Failed">
-```python
-# Unreserve stock for failed payments
-if payment.payment_status in [PaymentStatus.FAILED, PaymentStatus.CANCELLED]:
-    unreserve_stock_for_order(order)
-```
+**Stock Unreservation:**
+- If payment fails or is cancelled, reserved stock is released
+- Items become available again for other customers
+- Prevents stock being locked indefinitely for failed orders
 </Step>
 </Steps>
 
