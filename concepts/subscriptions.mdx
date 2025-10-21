@@ -101,8 +101,8 @@ graph TD
 A[Incomplete] -->|First payment succeeds| B[Active] 
 B -->|Payment fails, insufficient funds| C[Past Due] 
 B -->|Payment fails, card expired, reported stolen| D[Error] 
-D -->|Max retries exceeded, past due process finished| E[Expired] 
-C -->|Max retries exceeded, past due process finished| E[Expired] 
+D -->|Max retries exceeded, dunning process finished| E[Expired] 
+C -->|Max retries exceeded, dunning process finished| E[Expired] 
 B -->|Customer or admin pauses| F[On Hold] 
 F -->|Customer resumes| B 
 C -->|Payment succeeds| B
