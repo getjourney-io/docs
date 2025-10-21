@@ -27,31 +27,24 @@ description: "Welcome to the Journey API - A multi-tenant subscription billing a
   <Accordion title="Multi-Tenant Architecture" icon="building">
     Complete data isolation with separate database schemas for each merchant. Domain-based routing and tenant-specific configurations for payment providers, branding, and business rules.
   </Accordion>
-
   <Accordion title="Multiple Payment Providers" icon="credit-card">
     Support for Rapyd, Reepay, and Straumur with automatic dunning logic and retry mechanisms. Flexible payment method management with tokenization and recurring billing.
   </Accordion>
-
   <Accordion title="Subscription Management" icon="repeat">
     Full subscription lifecycle management including pause, resume, frequency changes, and cart modifications. Support for trial periods, proration, and flexible billing schedules.
   </Accordion>
-
   <Accordion title="Delivery & Fulfillment" icon="truck">
     Comprehensive delivery scheduling with postal code-based routing, carrier integrations, and fulfillment tracking. Support for delivery windows, packing notes, and route optimization.
   </Accordion>
-
   <Accordion title="Automatic Dunning" icon="rotate">
     Configurable retry logic for failed payments with automatic status transitions. Merchant-specific settings for retry attempts and cancellation timelines.
   </Accordion>
-
   <Accordion title="Customer Self-Service" icon="user">
     Built-in customer portal capabilities for subscription management, payment method updates, and delivery scheduling.
   </Accordion>
-
   <Accordion title="Inventory Management" icon="boxes-stacked">
     Real-time stock tracking with movement history and low-stock alerts. Support for product variations and SKU management.
   </Accordion>
-
   <Accordion title="Coupon System" icon="ticket">
     Flexible discount codes with percentage or fixed amount discounts. Time-based validity and product-specific restrictions.
   </Accordion>
@@ -89,17 +82,21 @@ The Journey API is organized into logical groups:
 ## Base URLs
 
 <CodeGroup>
+
 ```bash Production
 https://api.journey.io
 ```
+
 
 ```bash Staging
 https://staging-api.journey.io
 ```
 
+
 ```bash Development
 http://localhost:7001
 ```
+
 </CodeGroup>
 
 All API endpoints are versioned and prefixed with `/api/v1/`.
@@ -107,32 +104,16 @@ All API endpoints are versioned and prefixed with `/api/v1/`.
 ## Getting Started
 
 <CardGroup cols={2}>
-  <Card
-    title="Quickstart Guide"
-    icon="rocket"
-    href="/quickstart"
-  >
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
     Get up and running with your first API calls in minutes
   </Card>
-  <Card
-    title="Authentication"
-    icon="key"
-    href="/authentication"
-  >
+  <Card title="Authentication" icon="key" href="/authentication">
     Learn about passwordless login and session management
   </Card>
-  <Card
-    title="Core Concepts"
-    icon="lightbulb"
-    href="/concepts/subscriptions"
-  >
+  <Card title="Core Concepts" icon="lightbulb" href="/concepts/subscriptions">
     Understand subscriptions, billing cycles, and dunning
   </Card>
-  <Card
-    title="API Reference"
-    icon="book-open"
-    href="/api/customers/list"
-  >
+  <Card title="API Reference" icon="book-open" href="/api/customers/list">
     Explore all available API endpoints
   </Card>
 </CardGroup>
@@ -140,18 +121,10 @@ All API endpoints are versioned and prefixed with `/api/v1/`.
 ## Need Help?
 
 <CardGroup cols={2}>
-  <Card
-    title="API Status"
-    icon="signal"
-    href="https://status.journey.io"
-  >
+  <Card title="API Status" icon="signal" href="https://status.journey.io">
     Check the current status of the Journey API
   </Card>
-  <Card
-    title="Support"
-    icon="envelope"
-    href="mailto:support@journey.io"
-  >
+  <Card title="Support" icon="envelope" href="mailto:support@journey.io">
     Contact our team for assistance
   </Card>
 </CardGroup>
