@@ -72,7 +72,7 @@ Journey's subscription system works like a recipe:
     The subscription is processing normally. Orders are created and payments are charged according to each item's billing frequency. This is the healthy state.
   </Accordion>
   <Accordion title="Past Due" icon="circle-exclamation">
-    A recent payment failed with a retryable error (insufficient funds, card declined). The dunning process has started and will retry daily. 
+    A recent payment failed with a retryable error (insufficient funds, card declined). The dunning process has started and will retry daily.
 
     **Trigger:** Payment declined with error codes like `insufficient_funds`, `card_declined`
   </Accordion>
@@ -93,18 +93,10 @@ Journey's subscription system works like a recipe:
   </Accordion>
 </AccordionGroup>
 
-
 Subscriptions progress through clearly defined states with automatic or manually triggered (on my pages) transitions:
 
 ```mermaid
-graph TD
-    [Incomplete] --> |First payment succeeds| [Active]
-    [Active] --> |Payment fails| --> [Past Due]
-    [Past Due] --> |Credit card expired or reported stolen --> [Error]
-    [Error] --> |Max retries exceeded --> [Expired]
-    [Active] --> |Customer or admin pauses/cancels| --> [On Hold]
-    [On Hold] --> |Customer resumes| --> [Active]
-    [Past Due] --> |Payment succeeds| --> [Active]
+graph TD A[Incomplete] -->|First payment succeeds| B[Active] B -->|Payment fails| C[Past Due] C -->|Technical error| D[Error] D -->|Max retries exceeded| E[Expired] B -->|Customer pauses| F[On Hold] F -->|Customer resumes| B B -->|Customer cancels| G[Cancelled] C -->|Payment succeeds| B
 ```
 
 ## Subscription Frequencies
