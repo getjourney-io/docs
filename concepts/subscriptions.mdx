@@ -102,6 +102,7 @@ A[Incomplete] -->|First payment succeeds| B[Active]
 B -->|Payment fails| C[Past Due] 
 B -->|Payment fails, f.ex. card expired, reported stolen| D[Error] 
 D -->|Max retries exceeded, past due process finished| E[Expired] 
+C -->|Max retries exceeded, past due process finished| E[Expired] 
 B -->|Customer or admin pauses| F[On Hold] 
 F -->|Customer resumes| B 
 C -->|Payment succeeds| B
