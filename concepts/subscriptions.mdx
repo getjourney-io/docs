@@ -104,7 +104,7 @@ B -->|Payment fails, card expired, reported stolen| D[Error]
 D -->|Max retries exceeded, dunning process finished| E[Expired] 
 C -->|Max retries exceeded, dunning process finished| E[Expired] 
 B -->|Customer or admin pauses| F[On Hold] 
-F -->|Customer resumes| B 
+F -->|Customer or admin resumes| B 
 C -->|Payment succeeds| B
 D -->|Payment succeeds| B
 ```
