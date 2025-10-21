@@ -129,7 +129,7 @@ Each subscription item can have its own billing frequency:
 
 ### Frequency Calculations
 
-Journey uses `relativedelta` for accurate date arithmetic:
+To decide next delivery date for customers, Journey uses `relativedelta` for accurate date arithmetic:
 
 ```python
 # Weekly (7 days)
@@ -142,7 +142,7 @@ next_date = last_delivery_date + relativedelta(months=1)
 next_date = last_delivery_date + relativedelta(months=3)
 ```
 
-This ensures subscriptions created on Jan 31 will bill on Feb 28 (not March 3).
+This ensures that subscriptions created on Jan. 31 will be billed on Feb. 28 (not March 3).
 
 ## Delivery Synchronization Algorithm
 
@@ -156,7 +156,9 @@ With multi-frequency subscriptions, you could end up with many small, inefficien
 
 **Result:** High shipping costs, poor customer experience, increased carbon footprint.
 
-### The Solution: Join-by-Week Algorithm
+If this is something that the merchant wants to avoid, they can turn on the join-by-week feature.
+
+### The Join-by-Week Algorithm
 
 Journey automatically merges deliveries that are **within 5 days** of each other into a single shipment.
 
