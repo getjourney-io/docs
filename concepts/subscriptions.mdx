@@ -166,7 +166,7 @@ Journey automatically merges deliveries that are **within 5 days** of each other
 
 <Steps>
   <Step title="Calculate Next Date for Each Item">
-    For each product in the subscription, calculate when it's next due based on its frequency:
+    For each product in the subscription, Journey calculates when it's next due based on its frequency:
 
     ```
     Milk (weekly):    Last delivered Oct 1 → Next: Oct 8
@@ -175,14 +175,14 @@ Journey automatically merges deliveries that are **within 5 days** of each other
     ```
   </Step>
   <Step title="Find Earliest Date">
-    Identify which item is due first:
+    Which item is due first is identified:
 
     ```
     Earliest: Oct 1 (Coffee)
     ```
   </Step>
   <Step title="Check 5-Day Window">
-    See which other items are due within 5 days of the earliest date:
+    We check which other items are due within 5 days of the earliest date:
 
     ```
     Coffee:  0 days away → Include ✅
@@ -193,7 +193,7 @@ Journey automatically merges deliveries that are **within 5 days** of each other
     **Result:** Ship only Coffee on Oct 1
   </Step>
   <Step title="Repeat for Next Batch">
-    On Oct 8, repeat the process:
+    On Oct 8, the process is repeated:
 
     ```
     Milk:    0 days away → Include ✅
@@ -201,7 +201,7 @@ Journey automatically merges deliveries that are **within 5 days** of each other
     Coffee:  Already fulfilled
     ```
 
-    **Result:** Ship only Milk on Oct 8
+    **Result:** Only milk is shipped on Oct 8
 
     On Oct 15:
 
@@ -217,13 +217,13 @@ Journey automatically merges deliveries that are **within 5 days** of each other
     Milk:    0 days away → Include ✅
     ```
 
-    **Result:** Ship Milk + Eggs together on Oct 15
+    **Result:** Milk + Eggs are shipped together on Oct 15
   </Step>
 </Steps>
 
 ### Weekday Alignment
 
-Deliveries are aligned to postal code delivery schedules with cutoff days for packing:
+If you are shipping physical deliveries, all deliveries can be aligned to postal code delivery schedules with cutoff days for packing:
 
 **Example: Postal Code 101 (Reykjavík)**
 
@@ -235,7 +235,7 @@ Deliveries are aligned to postal code delivery schedules with cutoff days for pa
 }
 ```
 
-If the algorithm calculates delivery for **Monday**, it's automatically shifted to **Wednesday** (next available delivery day).
+If the algorithm calculates delivery for **Monday**, it's automatically shifted to **Wednesday** (next available delivery day for postal code 101).
 
 **Calculation:**
 
