@@ -96,7 +96,16 @@ Journey's subscription system works like a recipe:
 Subscriptions progress through clearly defined states with automatic or manually triggered (on my pages) transitions:
 
 ```mermaid
-graph TD A[Incomplete] -->|First payment succeeds| B[Active] B -->|Payment fails| C[Past Due] C -->|Technical error| D[Error] D -->|Max retries exceeded| E[Expired] B -->|Customer pauses| F[On Hold] F -->|Customer resumes| B B -->|Customer cancels| G[Cancelled] C -->|Payment succeeds| B
+graph TD 
+
+A[Incomplete] -->|First payment succeeds| B[Active] 
+B -->|Payment fails| C[Past Due] 
+C -->|Technical error| D[Error] 
+D -->|Max retries exceeded| E[Expired] 
+B -->|Customer pauses| F[On Hold] 
+F -->|Customer resumes| B 
+B -->|Customer cancels| G[Cancelled] 
+C -->|Payment succeeds| B
 ```
 
 ## Subscription Frequencies
