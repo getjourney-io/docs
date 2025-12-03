@@ -113,34 +113,33 @@ D -->|Payment succeeds| B
 
 Each subscription item can have its own billing frequency:
 
-| Frequency   | Description    | Interval  | Common Use Cases           |
-| ----------- | -------------- | --------- | -------------------------- |
-| Weekly      | Every 7 days   | 7 days    | Fresh groceries, meal kits |
-| Bi-weekly   | Every 14 days  | 14 days   | Household supplies         |
-| Monthly     | Every 30 days  | 1 month   | Insurance premiums, SaaS   |
-| Bi-monthly  | Every 60 days  | 60 days   | Quarterly-lite products    |
-| Quarterly   | Every 90 days  | 3 months  | Seasonal items, insurance  |
-| Semi-Annual | Every 180 days | 6 months  | Long-term services         |
-| Annual      | Every 365 days | 12 months | Annual memberships         |
+|| Frequency   | Description    | Interval  | Common Use Cases           |
+|| ----------- | -------------- | --------- | -------------------------- |
+|| Weekly      | Every 7 days   | 7 days    | Fresh groceries, meal kits |
+|| Bi-weekly   | Every 14 days  | 14 days   | Household supplies         |
+|| Monthly     | Every 30 days  | 1 month   | Insurance premiums, SaaS   |
+|| Bi-monthly  | Every 60 days  | 60 days   | Quarterly-lite products    |
+|| Quarterly   | Every 90 days  | 3 months  | Seasonal items, insurance  |
+|| Semi-Annual | Every 180 days | 6 months  | Long-term services         |
+|| Annual      | Every 365 days | 12 months | Annual memberships         |
 
 <Info>
-  Frequencies are configured at the merchant level. Use `GET /api/v1/merchant/{id}/subscription_frequencies/` to retrieve available options for your tenant.
+  Each business can customize which frequency options are available for their subscriptions. This allows you to offer only the delivery schedules that make sense for your business model.
 </Info>
 
-### Frequency Calculations
+### How Delivery Dates Are Calculated
 
-To decide next delivery date for customers, Journey uses `relativedelta` for accurate date arithmetic:
+The system automatically calculates when each item should be delivered next, based on its frequency. This calculation is more sophisticated than it might seem, especially for monthly deliveries.
 
-```python
-# Weekly (7 days)
-next_date = last_delivery_date + timedelta(days=7)
+**Examples:**
 
-# Monthly (1 month) - handles varying month lengths
-next_date = last_delivery_date + relativedelta(months=1)
+|| Frequency     | How It Works                                                                                                           |
+|| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+|| **Weekly**    | Each delivery is exactly 7 days after the previous one                                                                 |
+|| **Monthly**   | Delivered on the same date each month (e.g., always on the 15th), accounting for months with different numbers of days |
+|| **Quarterly** | Delivered every 3 months on the same day of the month                                                                  |
 
-# Quarterly (3 months)
-next_date = last_delivery_date + relativedelta(months=3)
-```
+For instance, if a customer's monthly delivery is on the 31st and one month only has 30 days, the system intelligently handles this edge case. This accuracy is critical for building customer trust and ensuring consistent, predictable billing.
 
 This ensures that subscriptions created on Jan. 31 will be billed on Feb. 28 (not March 3).
 
@@ -305,68 +304,43 @@ When the system processes the subscription, it creates orders from the recipe:
 
 ## Automated Processing
 
-### Daily Billing Cron
+### Daily Billing Process
 
-Journey runs a scheduled task every day at midnight:
-
-```bash
-python manage.py payment_for_delivery
-```
-
-This cron job handles all subscription billing automatically:
+The system runs a completely automated billing process every day to handle subscription payments. This ensures that recurring revenue is processed consistently without manual intervention, giving your team more time to focus on customer relationships and growth.
 
 <Steps>
-  <Step title="Process New Deliveries">
-    Find deliveries whose `delivery_date` has arrived and charge them
+  <Step title="Process Scheduled Deliveries">
+    The system identifies all subscriptions with deliveries scheduled for today and automatically charges the customer's payment method.
   </Step>
-  <Step title="Retry Failed Payments">
-    Attempt to charge past_due subscriptions (dunning process)
+  <Step title="Recover Failed Payments">
+    If a payment fails, the system automatically retries the charge. This recovery process (called dunning) helps maximize revenue by giving customers multiple opportunities to update their payment information before their subscription is interrupted.
   </Step>
-  <Step title="Handle Error Subscriptions">
-    Process subscriptions in error state that need attention
+  <Step title="Monitor Subscription Health">
+    Subscriptions that encounter payment issues are flagged as "at-risk" so your team can proactively reach out to customers before their service is disrupted. Automatic messages (email and SMS) can be configured that get sent to these customers. These messages can e.g. navigate customers to their my pages where they can update their payment information.
   </Step>
-  <Step title="Cancel Old Failed Invoices">
-    After `failed_payment_cancelled_days` (default 20), cancel delivery and expire subscription
+  <Step title="Enforce Payment Deadlines">
+    After a configurable grace period (default: 20 days), unpaid subscriptions are automatically cancelled. This protects your business from unlimited payment failures while giving customers a fair window to resolve billing issues.
   </Step>
-  <Step title="Auto-Mark Delivered">
-    For digital products or auto-delivery integrations
+  <Step title="Complete Digital Fulfillment">
+    For digital products and automated fulfillment integrations, deliveries are automatically marked as complete when no manual action is required.
   </Step>
 </Steps>
 
-### What Happens During Billing
+### Key Business Outcomes
 
-```python
-# 1. Find deliveries due today
-deliveries = delivery.objects.filter(
-    delivery_date=today,
-    delivered=False,
-    cancelled=False
-)
-
-# 2. For each delivery:
-for delivery_item in deliveries:
-    # Create payment if doesn't exist
-    if not delivery_item.order_id.payment_id:
-        create_payment(delivery_item)
-
-    # Charge the customer
-    result = charge_payment_method(
-        payment_method=customer.primary_payment_method,
-        amount=calculate_total(delivery_item.order_id)
-    )
-
-    # Update subscription status based on result
-    if result.success:
-        subscription.subscription_status = "active"
-    else:
-        subscription.subscription_status = "past_due"
-```
+When a payment is processed, the system automatically updates the subscription status based on the result. Successful charges keep the subscription active and the customer's service flowing uninterrupted. Failed charges transition the subscription to a "past due" state, triggering your retention workflows and giving you time to recover the revenue. This automated cycle ensures predictable recurring revenue while minimizing churn from payment failures.
 
 ## Dunning Management
 
 Journey automatically handles failed payments with configurable retry logic.
 
 ### Configuration (Per Merchant)
+
+The merchant can configure how many times a payment is attempted.
+
+<Warning>
+  Skoða Janus
+</Warning>
 
 ```json
 {
@@ -383,8 +357,8 @@ Journey automatically handles failed payments with configurable retry logic.
     Subscription: active → past_due
     Payment: settled → failed
     settling_attempts: 0 → 1
-    Event: SUBSCRIPTION_STATUS_SET_TO_PAST_DUE_FOR_THE_FIRST_TIME
-    Email: "Your payment failed, will retry tomorrow"
+    Event: Triggers SMS or Email reminder
+    SMS/Email: "Your payment failed, will retry tomorrow" - Your custom text
     ```
   </Step>
   <Step title="Days 2-19: Daily Retries">
@@ -423,154 +397,104 @@ Journey automatically handles failed payments with configurable retry logic.
 
 Journey categorizes payment failures as either **retryable** (past_due) or **requires intervention** (error):
 
-| Error Type         | Error Codes                                | State    | Retry? |
-| ------------------ | ------------------------------------------ | -------- | ------ |
-| Insufficient Funds | `insufficient_funds`, `51`, `do_not_honor` | PAST_DUE | Yes ✅  |
-| Card Declined      | `card_declined`, `05`, `04`                | PAST_DUE | Yes ✅  |
-| Expired Card       | `expired_card`, `54`                       | ERROR    | No ❌   |
-| Invalid Card       | `invalid_card_number`, `14`                | ERROR    | No ❌   |
-| Fraud Detected     | `fraud_detected`, `fraud`                  | ERROR    | No ❌   |
-| Technical Error    | `gateway_timeout`, `500`                   | ERROR    | No ❌   |
+|| Error Type         | Error Codes                                | State    | Retry? |
+|| ------------------ | ------------------------------------------ | -------- | ------ |
+|| Insufficient Funds | `insufficient_funds`, `51`, `do_not_honor` | PAST_DUE | Yes ✅  |
+|| Card Declined      | `card_declined`, `05`, `04`                | PAST_DUE | Yes ✅  |
+|| Expired Card       | `expired_card`, `54`                       | ERROR    | No ❌   |
+|| Invalid Card       | `invalid_card_number`, `14`                | ERROR    | No ❌   |
+|| Fraud Detected     | `fraud_detected`, `fraud`                  | ERROR    | No ❌   |
+|| Technical Error    | `gateway_timeout`, `500`                   | ERROR    | No ❌   |
 
 ## Creating a Subscription
 
+Setting up a new subscription follows a straightforward four-step process. Each step ensures the customer is verified, their payment method is secured, and their recurring order preferences are captured.
+
 <Steps>
-  <Step title="Create Customer">
-    ```bash
-    POST /api/v1/customer/
-    {
-      "full_name": "Jón Jónsson",
-      "email": "jon@example.is",
-      "phone_number": "7771234",
-      "address": "Laugavegur 1",
-      "postal_code": "101",
-      "city": "Reykjavík"
-    }
-    ```
-
-    See [Create Customer API](/api/customers/create)
+  <Step title="Capture Customer Information">
+    Collect the customer's basic information including name, email, phone number, and delivery address. This information is used for billing, customer communication, and order fulfillment.
   </Step>
-  <Step title="Add Payment Method">
-    ```bash
-    POST /api/v1/straumur/create-session-add-card/
-    {
-      "customer_id": 42,
-      "return_url": "https://yoursite.com/success"
-    }
-    ```
-
-    Redirect customer to the returned `checkoutUrl` to complete card verification.
-
-    See [Payment Providers](/api/providers/straumur)
+  <Step title="Secure Payment Method">
+    The customer adds and verifies a payment method (typically a credit or debit card). This is handled through a secure payment interface that keeps sensitive payment data protected while confirming the card is valid and active.
   </Step>
-  <Step title="Create Subscription">
-    ```bash
-    POST /api/v1/subscription/
-    {
-      "customer_id": 42,
-      "subscription_status": "active",
-      "delivery_option_id": 3,
-      "start_date": "2025-11-01"
-    }
-    ```
-
-    See [Create Subscription API](/api/subscriptions/create)
+  <Step title="Create the Subscription">
+    Once customer details and payment are confirmed, the subscription is activated. You can specify the start date and choose which delivery schedule option the customer prefers (e.g., weekly, bi-weekly, monthly).
   </Step>
-  <Step title="Add Recipe Items">
-    ```bash
-    POST /api/v1/subscription/789/update_cart/
-    {
-      "order_items": [
-        {
-          "product_variation_id": 5,
-          "quantity": 2,
-          "subscription_frequency_id": 1  // Weekly
-        },
-        {
-          "product_variation_id": 8,
-          "quantity": 1,
-          "subscription_frequency_id": 2  // Bi-weekly
-        }
-      ]
-    }
-    ```
-
-    See [Update Cart API](/api/subscriptions/update-cart)
+  <Step title="Configure Recurring Items">
+    The customer selects which products they want to receive and how frequently. For example, they might want item A delivered weekly and item B delivered bi-weekly. The system tracks these preferences and uses them during each automated billing cycle.
   </Step>
   <Step title="System Auto-Generates Orders">
-    Journey automatically:
+    Once the subscription is live, the system automatically handles the rest:
 
-    1. Calculates next delivery dates for each item based on frequency
-    2. Applies the 5-day synchronization algorithm
-    3. Aligns with postal code delivery schedules
-    4. Creates orders and deliveries
-    5. Charges on the delivery date
+    1. Calculates when each item needs to be delivered based on the customer's chosen frequency
+    2. Optimizes delivery dates to consolidate multiple items when possible
+    3. Coordinates with regional delivery schedules for efficiency
+    4. Creates orders and schedules deliveries
+    5. Charges the customer on their delivery date
   </Step>
 </Steps>
 
 ## Managing Subscriptions
 
+Your team has full flexibility to manage active subscriptions, making it easy to retain customers through life changes and evolving needs.
+
 ### Pause a Subscription
 
-```bash
-POST /api/v1/subscription/{id}/pause/
-{
-  "reason": "Customer going on vacation"
-}
-```
+Allow customers to temporarily stop their subscriptions without canceling. This is useful for vacations, budget constraints, or seasonal needs.
 
-**Effects:**
+<Warning>
+  Janus fjalla örlítið um ástæður pásu í gegnum mínar síður, getum líka lagt til að þú frekar seinkir eða hægir á.\
+  \
+  Einnig að þú getur stillt hvort að viðskiptavinurinn geti pásað eða ekki
+</Warning>
 
-- Status changes to `on_hold`
-- No new orders are generated
-- Pending deliveries remain scheduled (optionally cancel them separately)
-- Can be resumed at any time
+**What Happens:**
+
+- The subscription is placed on hold
+- No new charges occur
+- Customers can resume at any time without signing up again
+- Optionally, any pending deliveries can be cancelled if the customer prefers
+
+**Business Impact:** Pause functionality significantly reduces churn because customers can easily come back without friction.
 
 ### Resume a Subscription
 
-```bash
-POST /api/v1/subscription/{id}/resume/
-{
-  "coupon_code": "WELCOME_BACK10"  // Optional
-}
-```
+When customers are ready to restart, they can resume their subscription instantly.
 
-**Effects:**
+**What Happens:**
 
-- Status changes back to `active`
-- System re-syncs all items to calculate next delivery dates
-- New orders are generated starting from today
-- Optional coupon can be applied for retention
+- The subscription becomes active again
+- The system recalculates delivery dates based on the resumed date
+- New orders begin generating immediately
+- You can optionally apply a "welcome back" discount to encourage re-engagement
 
-### Update Cart Contents
+**Business Impact:** Reactivating paused subscriptions is pure revenue recovery with minimal effort.
 
-```bash
-POST /api/v1/subscription/{id}/update_cart/
-{
-  "order_items": [
-    {
-      "product_variation_id": 12,
-      "quantity": 3,
-      "subscription_frequency_id": 3
-    }
-  ]
-}
-```
+### Update Product Selections
 
-**Effects:**
+Customers can change which products they want to receive or adjust quantities at any time.
 
-- Recipe is updated immediately
-- Existing scheduled orders are NOT modified
-- Future orders use the new recipe
+**What Happens:**
 
-### Change Frequency
+- New product preferences take effect immediately for future deliveries
+- Any orders already paid continue as-is (no disruption)
+- Changes only apply to upcoming deliveries, protecting your revenue pipeline
 
-```bash
-POST /api/v1/subscription/{id}/update_frequency/
-{
-  "subscription_frequency_id": 3  // Change to monthly
-}
-```
+**Business Impact:** Flexibility here reduces churn from customers with changing preferences.
+
+### Adjust Delivery Frequency
+
+Customers can change how often they receive deliveries (e.g., switching from weekly to bi-weekly).
+
+**What Happens:**
+
+- The new frequency applies to all future orders
+- The system recalculates delivery schedules based on the new cadence
+- 
+
+  <Danger>
+    Janus fara yfir hvernig þetta er og bæta við dæmi
+  </Danger>
 
 <Warning>
   Frequency changes affect the next billing date calculation. The system recalculates based on the last successful charge plus the new frequency interval.
@@ -580,182 +504,102 @@ POST /api/v1/subscription/{id}/update_frequency/
 
 ### Customer Updates Payment Method During Dunning
 
-**Scenario:** Payment fails on Day 1, customer adds new card on Day 5.
+**Scenario:** A payment fails, but the customer quickly updates their payment information.
 
 **What Happens:**
 
-1. Customer adds new payment method via Straumur/Reepay/Rapyd
-2. New card is marked as `primary_payment_method`
-3. Next retry (Day 6) automatically uses the new card
-4. If successful, subscription returns to `active` status
-5. No missed deliveries - everything continues seamlessly
+- The customer adds and verifies a new payment method
+- The system automatically uses this updated method on the next retry
+- If the charge succeeds, the subscription returns to active status immediately
+- No deliveries are missed and the system continues seamlessly
 
-### Subscription with Already-Delivered Unpaid Order
+**Business Impact:** Self-service payment recovery removes friction and significantly improves retention. Many customers just need an easy way to update their card, and the system handles it automatically from there.
 
-**Scenario:** Order was delivered but payment failed (e.g., card declined after delivery).
+### Changing Frequency Mid-Subscription
 
-**Journey's Rule:** Must continue retrying regardless of retry limit because customer received the goods.
+**Scenario:** A customer decides to change how often they receive an item mid-cycle.
 
-```python
-if delivery_item.delivered == True:
-    # Force charge even if retry limit reached
-    charge_for_delivery(delivery_item)
-else:
-    # Can reschedule if not yet delivered
-    reschedule_delivery(delivery_item)
-```
+**What Happens:**
 
-### Frequency Change Mid-Cycle
+- Already paid deliveries continue unchanged (protecting your revenue)
+- The new frequency takes effect starting with the next order cycle
+- The system recalculates future delivery dates based on when the last delivery occurred
 
-**Scenario:** Customer changes milk from weekly to bi-weekly after 3 deliveries.
+<Danger>
+  Bæta við dæmi, mögulega visual
+</Danger>
 
-**Behavior:**
+**Business Impact:** Committed deliveries stay in place for predictable revenue, while future deliveries adapt to the customer's changing needs.
 
-- Already-scheduled deliveries are NOT updated
-- Next order generation uses the new frequency
-- Calculation: `last_delivery_date + new_frequency_interval`
+### Managing Out-of-Stock Situations
 
-### Product Out of Stock
+**Current Behavior:** Users can track the stock count and can review when products become low in stock and out of stock and handle the situation accordingly. For example:
 
-**Current Behavior:** No automatic handling. Merchants must manually:
+- Skip the item for this cycle only
+- Reschedule it for a future delivery
+- Substitute with an alternative product
 
-1. Check stock availability before order creation
-2. Notify customer
-3. Skip item, reschedule, or substitute product
-
-**Proposed Enhancement:** Auto-skip out-of-stock items with customer notification.
+**Business Impact:** Proactive inventory management prevents service interruptions and maintains customer satisfaction without requiring complex automation.
 
 ## Common Use Cases
 
 ### Insurance Premium Subscriptions
 
-Monthly premium billing with no physical delivery:
+Perfect for recurring fees or premium charges with no physical product involved.
 
-```json
-{
-  "customer_id": 42,
-  "subscription_status": "active",
-  "delivery_option_id": 1,  // Digital delivery
-  "order_items": [{
-    "product_variation_id": 101,  // Car insurance premium
-    "quantity": 1,
-    "subscription_frequency_id": 3  // Monthly
-  }]
-}
-```
+|| Aspect        | Details                                       |
+|| ------------- | --------------------------------------------- |
+|| **Items**     | 1 monthly premium charge                      |
+|| **Frequency** | Monthly                                       |
+|| **Example**   | Car insurance premium auto-renewed each month |
 
 ### SaaS Subscriptions
 
-Annual billing with proration support:
+Ideal for SaaS platforms offering tiered access or service levels.
 
-```json
-{
-  "customer_id": 42,
-  "subscription_status": "active",
-  "start_date": "2025-11-01",
-  "delivery_option_id": 1,  // Digital delivery
-  "order_items": [{
-    "product_variation_id": 205,  // Pro Plan
-    "quantity": 1,
-    "subscription_frequency_id": 7  // Annual
-  }]
-}
-```
+|| Aspect        | Details                                       |
+|| ------------- | --------------------------------------------- |
+|| **Items**     | 1 software plan/tier                          |
+|| **Frequency** | Monthly or annually                           |
+|| **Example**   | Pro Plan subscription renewed every 12 months |
 
 ### E-commerce Box Subscriptions
 
-Multi-item monthly box with physical delivery:
+Curated collections delivered as a complete package each month.
 
-```json
-{
-  "customer_id": 42,
-  "subscription_status": "active",
-  "delivery_option_id": 5,  // Home delivery
-  "order_items": [
-    {"product_variation_id": 301, "quantity": 2, "subscription_frequency_id": 3},
-    {"product_variation_id": 302, "quantity": 1, "subscription_frequency_id": 3},
-    {"product_variation_id": 303, "quantity": 3, "subscription_frequency_id": 3}
-  ]
-}
-```
+|| Aspect        | Details                                                       |
+|| ------------- | ------------------------------------------------------------- |
+|| **Items**     | Multiple curated products (e.g., 2 full-size + 1 sample item) |
+|| **Delivery**  | Monthly shipment                                              |
+|| **Frequency** | All items ship together monthly                               |
+|| **Example**   | Beauty box with 3 items arriving together each month          |
 
 ### Mixed-Frequency Grocery Subscription
 
-Weekly milk, bi-weekly eggs, monthly coffee - all synchronized:
+The most powerful example: a single subscription with items delivered at different frequencies, all intelligently synchronized.
 
-```json
-{
-  "customer_id": 42,
-  "subscription_status": "active",
-  "delivery_option_id": 8,
-  "order_items": [
-    {"product_variation_id": 401, "quantity": 2, "subscription_frequency_id": 1},  // Weekly milk
-    {"product_variation_id": 402, "quantity": 1, "subscription_frequency_id": 2},  // Bi-weekly eggs
-    {"product_variation_id": 403, "quantity": 1, "subscription_frequency_id": 3}   // Monthly coffee
-  ]
-}
-```
+**Subscription Contents:**
 
-## Best Practices
+|| Item       | Quantity  | Delivery Frequency |
+|| ---------- | --------- | ------------------ |
+|| Fresh Milk | 2 bottles | Every week         |
+|| Eggs       | 1 dozen   | Every 2 weeks      |
+|| Coffee     | 1 bag     | Every month        |
 
-<AccordionGroup>
-  <Accordion title="Always Validate Payment Methods" icon="credit-card">
-    Before creating or activating a subscription, verify the customer has a valid, verified payment method. Use payment provider verification endpoints before setting status to `active`.
-  </Accordion>
-  <Accordion title="Set Appropriate Start Dates" icon="calendar">
-    For physical products, set `start_date` far enough in the future to allow for production and shipping. For insurance/SaaS, you can start immediately.
-  </Accordion>
-  <Accordion title="Monitor Status Transitions" icon="arrows-spin">
-    Watch for transitions to `past_due` and `error` states. Implement webhooks (when available) or polling to notify customers and take action.
-  </Accordion>
-  <Accordion title="Leverage Multi-Frequency Capability" icon="layer-group">
-    Take advantage of Journey's unique ability to mix frequencies. This enables sophisticated subscription models that match actual consumption patterns.
-  </Accordion>
-  <Accordion title="Use Postal Code Delivery Schedules" icon="map">
-    Configure delivery schedules per postal code to optimize logistics and ensure deliveries align with carrier availability.
-  </Accordion>
-  <Accordion title="Provide Self-Service Management" icon="user-gear">
-    Build customer portals that allow pause, resume, and cart modifications. This reduces churn and support burden significantly.
-  </Accordion>
-  <Accordion title="Implement Retention Flows" icon="hand-holding-dollar">
-    When customers pause or attempt to cancel, offer coupons via the `resume` endpoint. This can recover 15-30% of churning subscriptions.
-  </Accordion>
-  <Accordion title="Track Delivery History" icon="clock-rotate-left">
-    Use `GET /api/v1/subscription/{id}/deliveries/` to show customers their full delivery history and upcoming schedule. Transparency builds trust.
-  </Accordion>
-</AccordionGroup>
+**How it Works:**
 
-## API Reference
+The system automatically orchestrates these different schedules. Some weeks the customer receives just milk. Other weeks, milk arrives with eggs. Once a month, all three items come together. The customer never has to think about it and the system coordinates everything automatically.
 
-<CardGroup cols={3}>
-  <Card title="List Subscriptions" icon="list" href="/api/subscriptions/list">
-    Get all subscriptions
-  </Card>
-  <Card title="Create Subscription" icon="plus" href="/api/subscriptions/create">
-    Create new subscription
-  </Card>
-  <Card title="Get Subscription" icon="eye" href="/api/subscriptions/get">
-    Retrieve details
-  </Card>
-  <Card title="Update Subscription" icon="pen" href="/api/subscriptions/update">
-    Modify subscription
-  </Card>
-  <Card title="Pause Subscription" icon="pause" href="/api/subscriptions/pause">
-    Temporarily stop billing
-  </Card>
-  <Card title="Resume Subscription" icon="play" href="/api/subscriptions/resume">
-    Restart subscription
-  </Card>
-  <Card title="Update Cart" icon="cart-shopping" href="/api/subscriptions/update-cart">
-    Modify items and frequencies
-  </Card>
-  <Card title="Update Frequency" icon="clock" href="/api/subscriptions/update-frequency">
-    Change billing frequency
-  </Card>
-  <Card title="Get Deliveries" icon="truck" href="/api/subscriptions/get">
-    View delivery schedule
-  </Card>
-</CardGroup>
+**Timeline Example:**
+
+- **Week 1:** Milk arrives (charged) + Coffee arrives (charged)
+- **Week 2:** Milk arrives (charged) + Eggs arrive (charged)
+- **Week 3:** Milk arrives (charged)
+- **Week 4:** Milk arrives (charged) + Eggs arrive (charged)
+- **Week 5:** Milk arrives (charged) + Coffee arrives (charged)
+- _(pattern repeats)_
+
+This is where Journey's intelligence shines, managing complex recurring orders that would otherwise frustrate customers or require manual coordination.
 
 ## Related Concepts
 
