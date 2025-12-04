@@ -22,14 +22,14 @@
             ]
           },
           {
-            "group": "Subscriptions & Deliveries",
+            "group": "Subscriptions",
             "pages": [
-              "concepts/subscriptions",
-              "concepts/delivery-subscriptions"
+              "subscriptions/subscriptions",
+              "subscriptions/delivery-fulfillment"
             ]
           },
           {
-            "group": "Payments & Claims",
+            "group": "Payments",
             "pages": [
               "payments/recurring-payments",
               "payments/dunning",
@@ -37,20 +37,16 @@
             ]
           },
           {
-            "group": "Core Concepts",
+            "group": "Customer Engagement",
             "pages": [
-              "concepts/communication",
-              "concepts/reports"
+              "customer-engagement/my-pages",
+              "customer-engagement/communication"
             ]
           },
           {
-            "group": "Integration Guides",
+            "group": "Analytics",
             "pages": [
-              "guides/insurance-integration",
-              "guides/saas-subscriptions",
-              "guides/ecommerce-subscriptions",
-              "guides/webhooks",
-              "guides/customer-portal"
+              "analytics/reports"
             ]
           }
         ]
