@@ -208,47 +208,6 @@ Customers can change which products they want to receive or adjust quantities at
 
 **Business Impact:** Flexibility here reduces churn from customers with changing preferences.
 
-### Adjust Delivery Frequency
-
-Customers can change how often they receive deliveries (e.g., switching from weekly to bi-weekly).
-
-**What Happens:**
-
-The system uses a simple rule: **next delivery date = last delivery date + new frequency interval**
-
-This means the next delivery is always calculated from when they last received (and paid for) the item, not from today.
-
-**Example:**
-
-```
-Scenario: Customer has been receiving milk weekly. 
-         Today is Oct 20. They want to switch to bi-weekly.
-
-Last delivery:        Oct 15 (successfully charged)
-Old frequency:        Weekly (7 days)
-New frequency:        Bi-weekly (14 days)
-Today:                Oct 20
-
-Calculation:
-├─ Start point: Last successful charge = Oct 15
-├─ Add new frequency: Oct 15 + 14 days
-└─ Next delivery: Oct 29
-
-Timeline:
-  Oct 15 (charged)  Oct 20 (change frequency)  Oct 29 (next charge)
-      ✓                      ↓
-   Last charge          Customer switches       New delivery
-                        (4 days in)            (14 days after Oct 15)
-```
-
-**Why This Approach:**
-
-- **Fair to customers** - They don't get charged earlier just because they made the change late in the week
-- **Predictable** - Changes don't create confusing gaps or sudden charges
-- **Simple logic** - Easy for customers to understand when their next charge will be
-
-**Business Impact:** Frequency changes are a powerful retention tool—customers who find a subscription too frequent often stick around when they can adjust the cadence.
-
 
 ## Subscription Frequencies
 

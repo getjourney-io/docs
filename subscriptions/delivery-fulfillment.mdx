@@ -3,6 +3,27 @@ title: "Delivery & Fulfillment"
 description: "This applies to merchants with physical products. If you only offer digital services, skip to Payments."
 ---
 
+## Overview
+
+If you sell physical products and use subscriptions, this section covers how Journey coordinates the complex logistics of getting items to customers on time, managing inventory, and optimizing delivery costs.
+
+**What You'll Learn:**
+
+1. **Delivery Synchronization** - How Journey intelligently groups multi-frequency items into efficient shipments
+2. **Packing Zones** - How the system protects your fulfillment team by locking in orders before packing begins
+3. **Frequency Management** - How customers can adjust delivery schedules without disrupting billing
+4. **Automated Processing** - How daily billing, payment recovery, and fulfillment work together seamlessly
+5. **Payment & Inventory Integration** - How payment status controls stock management and delivery timing
+
+**Key Business Benefits:**
+
+- **Reduced Shipping Costs** - Automatic consolidation of multi-frequency items saves on per-delivery fees
+- **Operational Efficiency** - Packing zones prevent chaos and ensure teams have time to fulfill orders properly
+- **Customer Satisfaction** - Predictable delivery schedules with flexibility to pause, resume, or adjust frequency
+- **Revenue Protection** - Automatic dunning (payment recovery) means failed payments don't block fulfillment
+
+Let's explore how it all works together:
+
 ## Delivery Synchronization Algorithm
 
 ### The Problem
@@ -131,6 +152,48 @@ Starts            No more orders            receives
 - **Improves accuracy** - No mid-packing changes causing errors
 - **Customer benefit** - More predictable delivery schedules
 
+### Adjust Delivery Frequency
+
+Customers can change how often they receive deliveries (e.g., switching from weekly to bi-weekly).
+
+**What Happens:**
+
+The system uses a simple rule: **next delivery date = last delivery date + new frequency interval**
+
+This means the next delivery is always calculated from when they last received (and paid for) the item, not from today.
+
+**Example:**
+
+```
+Scenario: Customer has been receiving milk weekly. 
+         Today is Oct 20. They want to switch to bi-weekly.
+
+Last delivery:        Oct 15 (successfully charged)
+Old frequency:        Weekly (7 days)
+New frequency:        Bi-weekly (14 days)
+Today:                Oct 20
+
+Calculation:
+├─ Start point: Last successful charge = Oct 15
+├─ Add new frequency: Oct 15 + 14 days
+└─ Next delivery: Oct 29
+
+Timeline:
+  Oct 15 (charged)  Oct 20 (change frequency)  Oct 29 (next charge)
+      ✓                      ↓
+   Last charge          Customer switches       New delivery
+                        (4 days in)            (14 days after Oct 15)
+```
+
+**Why This Approach:**
+
+- **Fair to customers** - They don't get charged earlier just because they made the change late in the week
+- **Predictable** - Changes don't create confusing gaps or sudden charges
+- **Simple logic** - Easy for customers to understand when their next charge will be
+
+**Business Impact:** Frequency changes are a powerful retention tool—customers who find a subscription too frequent often stick around when they can adjust the cadence.
+
+
 ## Automated Processing
 
 ### Daily Billing Process
@@ -248,15 +311,41 @@ Journey categorizes payment failures as either **retryable** (past_due) or **req
 
 **What Happens:**
 
-- Already paid deliveries continue unchanged (protecting your revenue)
-- The new frequency takes effect starting with the next order cycle
-- The system recalculates future delivery dates based on when the last delivery occurred
+- All previously scheduled deliveries continue unchanged (whether paid or unpaid)
+- The new frequency takes effect starting from the **latest scheduled delivery date**, not the last paid delivery
+- The system recalculates future delivery dates based on the **maximum delivery date already in the system** (paid or unpaid)
 
-<Danger>
-  Bæta við dæmi, mögulega visual
-</Danger>
+**Example:**
 
-**Business Impact:** Committed deliveries stay in place for predictable revenue, while future deliveries adapt to the customer's changing needs.
+```
+Scenario: Customer has weekly milk deliveries. 
+         Today is Nov 8. They switch to bi-weekly.
+
+Scheduled but unpaid: Nov 12 (automatically created by system)
+Old frequency: Weekly (7 days)
+New frequency: Bi-weekly (14 days)
+Today: Nov 8
+
+Timeline:
+  Nov 5 (charged)    Nov 8 (change)    Nov 12 (scheduled)    Nov 26 (new next)
+      ✓                  ↓                   ✓                      ✓
+    Last delivery   Customer switches  This still happens     New delivery
+                    to bi-weekly       (already in system)    (14 days after Nov 12)
+Result:
+├─ Nov 5 delivery: Occurred as normal
+├─ Nov 12 delivery: Proceeds as scheduled (already exists in system)
+├─ Nov 19 delivery: Cancelled/removed because new frequency starts from Nov 12
+└─ Nov 26 becomes the new delivery date (Nov 12 + 14 days)
+```
+
+**Why This Works:**
+
+- The system doesn't track "paid vs unpaid" when calculating the next delivery — it tracks **all scheduled deliveries**
+- When frequency changes, it uses the **latest scheduled delivery date** as the baseline
+- This prevents overlapping or skipped deliveries
+- Existing orders stay in place to maintain consistency with the fulfillment pipeline
+
+**Business Impact:** Future deliveries adapt to the new frequency based on the latest scheduled date, ensuring a smooth transition without gaps or overlaps. Existing scheduled orders are preserved regardless of payment status to maintain fulfillment consistency.
 
 ### Managing Out-of-Stock Situations
 
@@ -267,3 +356,21 @@ Journey categorizes payment failures as either **retryable** (past_due) or **req
 - Substitute with an alternative product
 
 **Business Impact:** Proactive inventory management prevents service interruptions and maintains customer satisfaction without requiring complex automation.
+
+## Related Concepts
+
+<CardGroup cols={2}>
+  <Card title="Subscriptions" icon="repeat" href="/subscriptions/subscriptions">
+    Understand subscription setup, customer management, and how delivery integrates with the subscription lifecycle
+  </Card>
+  <Card title="Dunning & Payment Recovery" icon="triangle-exclamation" href="/payments/dunning">
+    Learn how failed payments are handled and how the dunning process protects your fulfillment operations
+  </Card>
+  <Card title="Communications" icon="envelope" href="/customer-engagement/communication">
+    Explore how delivery notifications, delays, and updates are communicated to customers
+  </Card>
+  <Card title="Recurring Payments" icon="credit-card" href="/payments/recurring-payments">
+    Understand how payments are processed and how payment status drives delivery fulfillment
+  </Card>
+</CardGroup>
+
