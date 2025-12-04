@@ -1,5 +1,5 @@
 ---
-title: "Customer Portal (My Pages)"
+title: "My Pages - Customer Portal"
 description: "A comprehensive customer self-service portal for managing subscriptions, viewing order history, and updating account information"
 ---
 
@@ -7,13 +7,9 @@ description: "A comprehensive customer self-service portal for managing subscrip
 
 The **My Pages** customer portal is Journey's self-service interface that empowers your customers to manage their subscriptions, track deliveries, and update account information without requiring support intervention. This feature is critical for reducing operational costs while improving customer satisfaction and retention.
 
-<Info>
-The customer portal is accessed through the `/me` route and is available to all authenticated customers.
-</Info>
-
 ## Why My Pages Matters
 
-### For Business Executives
+### For Merchants
 
 <AccordionGroup>
   <Accordion title="Reduce Support Costs" icon="dollar-sign">
@@ -30,7 +26,7 @@ The customer portal is accessed through the `/me` route and is available to all 
   </Accordion>
 </AccordionGroup>
 
-### For Current Users
+### For Customers
 
 The customer portal provides a transparent, always-available interface for your customers to manage their relationship with your business. It's designed to be intuitive and mobile-friendly, supporting your customers wherever they are.
 
@@ -109,7 +105,6 @@ Customers can perform comprehensive subscription modifications:
 #### Cancel Subscriptions
 - Initiate cancellation with reason capture
 - Understand cancellation policies
-- See refund information where applicable
 - Option to pause instead of cancel
 
 ### 4. Account Information Management
@@ -131,7 +126,6 @@ Customers can perform comprehensive subscription modifications:
 - Postal code validation against delivery schedules
 - Automatic delivery date adjustment when postal code changes
 - Integration with carrier location services
-- Real-time validation of address information
 
 ### 5. Payment Information
 
@@ -140,7 +134,6 @@ Customers can perform comprehensive subscription modifications:
 - Update credit card information
 - See payment history and status
 - Download invoices for accounting purposes
-- View failed payment information with retry details
 
 **Business benefits:**
 - Customers can update expired cards proactively
@@ -150,9 +143,8 @@ Customers can perform comprehensive subscription modifications:
 
 **Technical features:**
 - Secure payment tokenization
-- Integration with multiple payment processors (Rapyd, Reepay, Straumur)
+- Integration with multiple payment processors
 - Automatic invoice generation
-- Payment status tracking with retry information
 
 ### 6. Product Exchange Tracking (Returnable Items)
 
@@ -195,9 +187,9 @@ The portal uses a clean, tabbed interface optimized for both desktop and mobile:
 - Error handling with clear user messages
 - Loading states during data operations
 
-## Multi-Tenant Customization
+## White-Label Customization
 
-Journey's multi-tenant architecture allows each merchant to customize the portal:
+Journey's portal can be fully customized to match each merchant's brand and identity:
 
 ### Branding
 - Custom color schemes matching merchant brand
@@ -214,117 +206,11 @@ Journey's multi-tenant architecture allows each merchant to customize the portal
 - Payment processor specific features
 - Merchant-specific product attributes
 
-## Security & Privacy
-
-<Warning>
-All customer data is isolated by tenant using PostgreSQL schemas. Customers can only access their own data, and all API requests are authenticated.
-</Warning>
-
-**Security features:**
-- Authentication required for all portal access
-- Session management with secure tokens
-- Payment information tokenization (PCI compliance)
-- SQL injection protection through parameterized queries
-- Role-based access control (customers vs. staff)
-
-## Technical Implementation
-
-### Architecture
-- Built with **Next.js 14** (App Router) for optimal performance
-- **React Query** for data fetching and caching
-- **Zustand** for client-side state management
-- **Server-side rendering** for initial page load performance
-- **Multi-tenant database architecture** with isolated schemas
-
-### Authentication
-- Customers authenticate via SMS or email code
-- Session-based authentication with secure cookies
-- Automatic redirect to login if unauthenticated
-- Support for staff impersonation (for support purposes)
-
-### Data Flow
-1. Initial page load fetches customer data server-side
-2. Client-side React Query caches and manages updates
-3. Mutations trigger optimistic updates for instant feedback
-4. Background refetch ensures data consistency
-5. Real-time validation prevents invalid operations
-
-## Integration with Journey Systems
-
-The customer portal integrates seamlessly with Journey's core systems:
-
-### Subscription Engine
-- Real-time subscription modifications
-- Automatic delivery planning adjustments
-- Frequency change handling with proration
-
-### Delivery System
-- Postal code-based delivery scheduling
-- Carrier integration for location selection
-- Delivery window calculations
-- Route optimization updates
-
-### Payment Processing
-- Payment method updates flow to payment processors
-- Invoice generation and PDF creation
-- Payment retry coordination with dunning system
-
-### Communication System
-- Confirmation emails for all customer actions
-- SMS notifications for delivery updates
-- Customizable notification preferences
-
-## Decision-Making Guide
-
-### Should you enable the customer portal?
-
-**Yes, if you:**
-- Have recurring customers who need to manage their own subscriptions
-- Want to reduce support ticket volume for common tasks
-- Need to scale customer operations without proportional staff growth
-- Offer flexible subscription options (frequencies, products, delivery dates)
-- Want to improve customer satisfaction and retention
-
-**Consider customization if you:**
-- Have unique business processes not covered by default features
-- Need integration with specific carriers or payment systems
-- Require industry-specific compliance features
-- Want to white-label the portal with your complete branding
-
-**Additional development needed if you:**
-- Require custom product configuration beyond variations
-- Need integration with external CRM or ERP systems
-- Want advanced analytics dashboards for customers
-- Need specialized workflows for your industry
-
-## Getting Started
-
-<Steps>
-  <Step title="Configure Authentication">
-    Set up SMS or email authentication for your customers using Journey's communication system.
-  </Step>
-  <Step title="Customize Branding">
-    Upload your logo, cover images, and configure color schemes in the merchant settings.
-  </Step>
-  <Step title="Enable Features">
-    Choose which portal features to enable based on your business model.
-  </Step>
-  <Step title="Test User Flows">
-    Create test subscriptions and walk through all customer journeys to ensure proper functionality.
-  </Step>
-  <Step title="Train Support Team">
-    Ensure your support team understands portal capabilities to guide customers effectively.
-  </Step>
-  <Step title="Launch to Customers">
-    Communicate portal availability through email, SMS, or your website.
-  </Step>
-</Steps>
-
 ## Support & Resources
 
 <CardGroup cols={2}>
-  <Card title="API Reference" icon="code" href="/api/subscriptions/update-cart">
-    Technical documentation for the underlying APIs powering the portal
+  <Card title="Customer Communication" icon="message-square" href="/customer-engagement/communication">
+    Set up notifications, emails, and SMS messages to keep customers informed
   </Card>
   <Card title="Authentication Setup" icon="key" href="/authentication">
     Configure customer authentication for portal access
@@ -341,7 +227,7 @@ The customer portal integrates seamlessly with Journey's core systems:
 
 <AccordionGroup>
   <Accordion title="Can customers cancel their own subscriptions?">
-    Yes, customers can initiate cancellation through the portal. You can configure whether cancellations are immediate or require support approval, and capture cancellation reasons for analysis.
+    Yes, customers can initiate cancellation through their My Pages. You can configure whether cancellations are immediate or require support approval, and capture cancellation reasons for analysis.
   </Accordion>
   <Accordion title="How do delivery date changes affect fulfillment?">
     When a customer changes a delivery date, Journey automatically updates the delivery schedule and notifies your fulfillment team. The system respects minimum notice periods you configure to avoid same-day changes.
@@ -355,7 +241,7 @@ The customer portal integrates seamlessly with Journey's core systems:
   <Accordion title="Is the portal mobile-friendly?">
     Absolutely. The portal is fully responsive and optimized for mobile devices, which is where most customers will access it from delivery confirmation emails and SMS messages.
   </Accordion>
-  <Accordion title="Can we customize the portal features?">
-    Yes, Journey's multi-tenant architecture allows extensive customization including branding, feature toggles, custom workflows, and integration with your specific carriers and payment processors.
+  <Accordion title="Can I customize the My Pages features and look?">
+    Yes, Journey's allows extensive customization including branding, feature toggles, custom workflows, and integration with your specific carriers and payment processors.
   </Accordion>
 </AccordionGroup>
