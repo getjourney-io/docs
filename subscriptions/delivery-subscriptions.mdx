@@ -1,0 +1,268 @@
+---
+title: "Subscriptions with physical products"
+---
+
+## Delivery Synchronization Algorithm
+
+### The Problem
+
+With multi-frequency subscriptions, you could end up with many small, inefficient deliveries:
+
+- **Monday:** Milk only (weekly)
+- **Tuesday:** Eggs only (bi-weekly)
+- **Friday:** Coffee only (monthly)
+
+**Result:** High shipping costs, poor customer experience, increased carbon footprint.
+
+If this is something that the merchant wants to avoid, they can turn on the join-by-week feature.
+
+### The Join-by-Week Algorithm
+
+Journey automatically merges deliveries that are **within 5 days** of each other into a single shipment. This intelligent consolidation reduces shipping costs for both you and your customers, customers benefit from fewer shipments and lower delivery fees, while you reduce per-unit shipping expenses through bulk consolidation.
+
+#### How It Works
+
+<Steps>
+  <Step title="Calculate Next Date for Each Item">
+    For each product in the subscription, Journey calculates when it's next due based on its frequency:
+
+    ```
+    Milk (weekly):    Last delivered Oct 1 → Next: Oct 8
+    Eggs (bi-weekly): Last delivered Oct 1 → Next: Oct 15
+    Coffee (monthly): Last delivered Sep 1 → Next: Oct 1
+    ```
+  </Step>
+  <Step title="Find Earliest Date">
+    Which item is due first is identified:
+
+    ```
+    Earliest: Oct 1 (Coffee)
+    ```
+  </Step>
+  <Step title="Check 5-Day Window">
+    We check which other items are due within 5 days of the earliest date:
+
+    ```
+    Coffee:  0 days away → Include ✅
+    Milk:    7 days away → Don't include (outside window)
+    Eggs:    14 days away → Don't include
+    ```
+
+    **Result:** Ship only Coffee on Oct 1
+  </Step>
+  <Step title="Repeat for Next Batch">
+    On Oct 8, the process is repeated:
+
+    ```
+    Milk:    0 days away → Include ✅
+    Eggs:    7 days away → Don't include (but getting close!)
+    Coffee:  Already fulfilled
+    ```
+
+    **Result:** Only milk is shipped on Oct 8
+
+    On Oct 15:
+
+    ```
+    Eggs:    0 days away → Include ✅
+    Milk:    Already fulfilled (next due Oct 15)
+    ```
+
+    Wait! Milk is also due Oct 15. Both within window:
+
+    ```
+    Eggs:    0 days away → Include ✅
+    Milk:    0 days away → Include ✅
+    ```
+
+    **Result:** Milk + Eggs are shipped together on Oct 15
+  </Step>
+</Steps>
+
+#### Business Benefits of Consolidation
+
+By intelligently grouping deliveries within a 5-day window:
+
+| Benefit                        | Impact                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| **Reduced Shipments**          | Customers receive fewer packages (fewer shipping fees pass to them)                    |
+| **Lower Per-Unit Costs**       | Consolidating multiple items onto one truck reduces your cost per delivery             |
+| **Improved Margins**           | Fewer shipments = better profitability on subscriptions                                |
+| **Better Customer Experience** | Customers prefer consolidated deliveries (less packaging waste, fewer doorstep visits) |
+| **Logistics Efficiency**       | More items per shipment = better truck utilization and lower carbon footprint          |
+
+This is why multi-frequency subscriptions (milk weekly, eggs bi-weekly, coffee monthly) don't result in three separate shipments—the algorithm intelligently batches items that are due around the same time.
+
+### Packing Zones & Weekday Alignment
+
+If you're shipping physical deliveries, the system protects your fulfillment operations by:
+
+1. **Locking down packing time** before each delivery day
+2. **Aligning deliveries to allowed weekdays** for each postal code
+
+This prevents the chaos of scheduling deliveries during weeks when your team is still packing previous orders.
+
+#### Packing Zone Configuration
+
+You configure for each delivery day:
+
+- **When packing starts:** typically 1 day before delivery (Wednesday for a Thursday delivery)
+- **When new orders are locked in:** typically 8 AM on delivery day (by Thursday 8 AM, Thursday's packing is frozen)
+
+**Visual Timeline:**
+
+```
+Wednesday              Thursday              Friday
+00:00 ────────────── 08:00 ────────────────
+  ↓                    ↓                      ↓
+Packing               CUTOFF -              Customer
+Starts            No more orders            receives
+(prev orders)     for Thursday          (if paid on time)
+                  packing locked in
+```
+
+**Key Rule:** If a delivery date falls within this packing window, it's automatically pushed to the **next allowed weekday** for that postal code.
+
+**Why This Matters:**
+
+- **Prevents overwhelming packing teams** - Can't add rush orders once packing starts
+- **Guarantees fulfillment time** - Cutoff ensures orders are finalized before hand-packing
+- **Improves accuracy** - No mid-packing changes causing errors
+- **Customer benefit** - More predictable delivery schedules
+
+## Automated Processing
+
+### Daily Billing Process
+
+The system runs a completely automated billing process every day to handle subscription payments. This ensures that recurring revenue is processed consistently without manual intervention, giving your team more time to focus on customer relationships and growth.
+
+<Steps>
+  <Step title="Process Scheduled Deliveries">
+    The system identifies all subscriptions with deliveries scheduled for today and automatically charges the customer's payment method.
+  </Step>
+  <Step title="Recover Failed Payments">
+    If a payment fails, the system automatically retries the charge. This recovery process (called dunning) helps maximize revenue by giving customers multiple opportunities to update their payment information before their subscription is interrupted.
+  </Step>
+  <Step title="Monitor Subscription Health">
+    Subscriptions that encounter payment issues are flagged as "at-risk" so your team can proactively reach out to customers before their service is disrupted. Automatic messages (email and SMS) can be configured that get sent to these customers. These messages can e.g. navigate customers to their my pages where they can update their payment information.
+  </Step>
+  <Step title="Enforce Payment Deadlines">
+    After a configurable grace period (default: 20 days), unpaid subscriptions are automatically cancelled. This protects your business from unlimited payment failures while giving customers a fair window to resolve billing issues.
+  </Step>
+  <Step title="Complete Digital Fulfillment">
+    For digital products and automated fulfillment integrations, deliveries are automatically marked as complete when no manual action is required.
+  </Step>
+</Steps>
+
+### Key Business Outcomes
+
+When a payment is processed, the system automatically updates the subscription status based on the result. Successful charges keep the subscription active and the customer's service flowing uninterrupted. Failed charges transition the subscription to a "past due" state, triggering your retention workflows and giving you time to recover the revenue. This automated cycle ensures predictable recurring revenue while minimizing churn from payment failures.
+
+## Dunning Management
+
+Journey automatically handles failed payments through a configurable two-layer system that balances recovery opportunities with business protection.
+
+### How It Works: Two Key Controls
+
+The dunning system uses **two distinct levers** to manage failed payments:
+
+<Info>
+  **Retry Attempts:** How many times the system tries to collect payment (typically one attempt per day)
+
+  **Cancellation Days:** After how many calendar days the system gives up and cancels the delivery
+
+  These work independently, giving you flexibility to match your business strategy.
+</Info>
+
+**Example Configuration:**
+
+- **Dunning Settling Attempts:** 25 (retry up to 25 times to maximize recovery)
+- **Failed Payment Cancelled Days:** 18 (but free up inventory after 18 days for other orders)
+
+Both are fully configurable per your business needs.
+
+### Understanding the Dunning Timeline
+
+Here's what happens with the example configuration (25 attempts, 18 days):
+
+| Timeline       | What Happens                                           | Subscription Status          | Customer Experience                                        |
+| -------------- | ------------------------------------------------------ | ---------------------------- | ---------------------------------------------------------- |
+| **Day 1**      | Payment attempt fails                                  | Changes to PAST_DUE or ERROR | Receives notification with next steps                      |
+| **Days 2-17**  | System retries once per day                            | Stays PAST_DUE/ERROR         | Receives reminders every 4 attempts                        |
+| **Day 18**     | Delivery cancelled and stock freed                     | Still PAST_DUE/ERROR         | Inventory is reallocated; no more delivery attempt         |
+| **Days 19-25** | System continues retrying (attempting to collect debt) | Still PAST_DUE/ERROR         | Receives continued reminders every 4 attempts              |
+| **Day 25**     | Reaches max retry attempts                             | Changes to EXPIRED           | Receives final cancellation notice; subscription suspended |
+
+**Key Insight:** The delivery gets cancelled on Day 18 (freeing inventory), but the subscription keeps trying to collect payment until Day 25 (maximizing revenue recovery). This separation lets you balance operational concerns (inventory) with financial goals (payment recovery).
+
+### Configurable Strategy
+
+You can adjust these settings independently to match your business needs:
+
+| Scenario               | Dunning Attempts | Cancelled Days | Why Different?                                                                           |
+| ---------------------- | ---------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| **Inventory-Focused**  | 25               | 18             | Keep retrying payment longer, but free up stock faster for other orders                  |
+| **Balanced (Default)** | 20               | 20             | Attempts expire at roughly the same time as delivery cleanup                             |
+| **B2B/High-Value**     | 15               | 25             | Stop automated retries sooner, but keep longer for manual intervention or reconciliation |
+| **Fulfillment-Driven** | 20               | 10             | Keep retrying, but notify warehouse 10 days in to reallocate resources                   |
+
+**Key Principle:** These two settings let you optimize for different business constraints:
+
+- **Dunning attempts** = How aggressive you want to be about recovering revenue
+- **Cancelled days** = How long you can hold inventory or keep delivery records in limbo
+
+**During this entire period, customers can update their payment method at any time.** The next automatic retry will use their new card.
+
+### Error Code Classification
+
+Journey categorizes payment failures as either **retryable** (past_due) or **requires intervention** (error):
+
+| Error Type         | Error Codes                                | State    | Retry? |
+| ------------------ | ------------------------------------------ | -------- | ------ |
+| Insufficient Funds | `insufficient_funds`, `51`, `do_not_honor` | PAST_DUE | Yes ✅  |
+| Card Declined      | `card_declined`, `05`, `04`                | PAST_DUE | Yes ✅  |
+| Expired Card       | `expired_card`, `54`                       | ERROR    | No ❌   |
+| Invalid Card       | `invalid_card_number`, `14`                | ERROR    | No ❌   |
+| Fraud Detected     | `fraud_detected`, `fraud`                  | ERROR    | No ❌   |
+| Technical Error    | `gateway_timeout`, `500`                   | ERROR    | No ❌   |
+
+## Edge Cases & Special Scenarios
+
+### Customer Updates Payment Method During Dunning
+
+**Scenario:** A payment fails, but the customer quickly updates their payment information.
+
+**What Happens:**
+
+- The customer adds and verifies a new payment method
+- The system automatically uses this updated method on the next retry
+- If the charge succeeds, the subscription returns to active status immediately
+- No deliveries are missed and the system continues seamlessly
+
+**Business Impact:** Self-service payment recovery removes friction and significantly improves retention. Many customers just need an easy way to update their card, and the system handles it automatically from there.
+
+### Changing Frequency Mid-Subscription
+
+**Scenario:** A customer decides to change how often they receive an item mid-cycle.
+
+**What Happens:**
+
+- Already paid deliveries continue unchanged (protecting your revenue)
+- The new frequency takes effect starting with the next order cycle
+- The system recalculates future delivery dates based on when the last delivery occurred
+
+<Danger>
+  Bæta við dæmi, mögulega visual
+</Danger>
+
+**Business Impact:** Committed deliveries stay in place for predictable revenue, while future deliveries adapt to the customer's changing needs.
+
+### Managing Out-of-Stock Situations
+
+**Current Behavior:** Users can track the stock count and can review when products become low in stock and out of stock and handle the situation accordingly. For example:
+
+- Skip the item for this cycle only
+- Reschedule it for a future delivery
+- Substitute with an alternative product
+
+**Business Impact:** Proactive inventory management prevents service interruptions and maintains customer satisfaction without requiring complex automation.

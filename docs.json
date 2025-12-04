@@ -22,9 +22,15 @@
             ]
           },
           {
-            "group": "Core Concepts",
+            "group": "Subscriptions Guide",
             "pages": [
               "concepts/subscriptions",
+              "concepts/delivery-subscriptions"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
               "concepts/communication",
               "concepts/dunning",
               "concepts/recurring-payments",
