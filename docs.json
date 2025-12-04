@@ -14,11 +14,9 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "What is Journey?",
             "pages": [
-              "introduction",
-              "quickstart",
-              "authentication"
+              "introduction"
             ]
           },
           {
@@ -50,105 +48,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "Authentication",
-            "pages": [
-              "api/auth/send-sms-code",
-              "api/auth/send-email-code",
-              "api/auth/login-sms",
-              "api/auth/check-auth"
-            ]
-          },
-          {
-            "group": "Customers",
-            "pages": [
-              "api/customers/list",
-              "api/customers/create",
-              "api/customers/get",
-              "api/customers/update",
-              "api/customers/delete",
-              "api/customers/subscriptions"
-            ]
-          },
-          {
-            "group": "Subscriptions",
-            "pages": [
-              "api/subscriptions/list",
-              "api/subscriptions/create",
-              "api/subscriptions/get",
-              "api/subscriptions/update",
-              "api/subscriptions/pause",
-              "api/subscriptions/resume",
-              "api/subscriptions/update-cart",
-              "api/subscriptions/update-frequency"
-            ]
-          },
-          {
-            "group": "Orders",
-            "pages": [
-              "api/orders/list",
-              "api/orders/create",
-              "api/orders/get",
-              "api/orders/update"
-            ]
-          },
-          {
-            "group": "Payments",
-            "pages": [
-              "api/payments/overview",
-              "api/payments/settle-balance",
-              "api/payments/payment-methods"
-            ]
-          },
-          {
-            "group": "Payment Providers",
-            "pages": [
-              "api/providers/rapyd",
-              "api/providers/reepay",
-              "api/providers/straumur"
-            ]
-          },
-          {
-            "group": "Deliveries",
-            "pages": [
-              "api/deliveries/list",
-              "api/deliveries/get",
-              "api/deliveries/update",
-              "api/deliveries/options",
-              "api/deliveries/schedules"
-            ]
-          },
-          {
-            "group": "Products & Inventory",
-            "pages": [
-              "api/products/list",
-              "api/products/get",
-              "api/products/variations",
-              "api/products/stock"
-            ]
-          },
-          {
-            "group": "Coupons",
-            "pages": [
-              "api/coupons/list",
-              "api/coupons/create",
-              "api/coupons/get",
-              "api/coupons/update",
-              "api/coupons/delete"
-            ]
-          },
-          {
-            "group": "Merchant",
-            "pages": [
-              "api/merchant/get",
-              "api/merchant/frequencies"
-            ]
-          }
-        ]
       }
     ],
     "global": {
@@ -160,7 +59,7 @@
         },
         {
           "anchor": "Support",
-          "href": "mailto:support@journey.io",
+          "href": "mailto:hello@getjourney.io",
           "icon": "envelope"
         }
       ]
@@ -197,8 +96,6 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/getjourney",
-      "github": "https://github.com/getjourney",
       "linkedin": "https://linkedin.com/company/getjourney"
     }
   },

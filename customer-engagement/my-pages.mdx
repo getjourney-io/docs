@@ -1,4 +1,247 @@
 ---
-title: "My Pages"
-description: "Understanding Journey's recipe-based subscription engine with multi-frequency billing"
+title: "My Pages - Customer Portal"
+description: "A comprehensive customer self-service portal for managing subscriptions, viewing order history, and updating account information"
 ---
+
+## Overview
+
+The **My Pages** customer portal is Journey's self-service interface that empowers your customers to manage their subscriptions, track deliveries, and update account information without requiring support intervention. This feature is critical for reducing operational costs while improving customer satisfaction and retention.
+
+## Why My Pages Matters
+
+### For Merchants
+
+<AccordionGroup>
+  <Accordion title="Reduce Support Costs" icon="dollar-sign">
+    By enabling customers to self-manage their subscriptions, delivery dates, and account information, you can significantly reduce support ticket volume. Common tasks like pausing subscriptions or rescheduling deliveries no longer require staff intervention.
+  </Accordion>
+  <Accordion title="Improve Customer Retention" icon="users">
+    Customers who have control over their subscriptions are more likely to pause rather than cancel when they need a break. The portal makes it easy for customers to modify their plans, leading to higher lifetime value.
+  </Accordion>
+  <Accordion title="Increase Revenue" icon="chart-line">
+    The portal enables customers to easily add products to existing subscriptions or create one-off orders, creating upsell opportunities without sales team involvement.
+  </Accordion>
+  <Accordion title="Operational Efficiency" icon="gauge-high">
+    Real-time updates to subscriptions, delivery schedules, and customer information flow directly into your fulfillment systems, eliminating manual data entry and reducing errors.
+  </Accordion>
+</AccordionGroup>
+
+### For Customers
+
+The customer portal provides a transparent, always-available interface for your customers to manage their relationship with your business. It's designed to be intuitive and mobile-friendly, supporting your customers wherever they are.
+
+## Core Features
+
+### 1. Subscription Overview
+
+**What customers can do:**
+- View all active and inactive subscriptions
+- See subscription status (active, paused, on hold, cancelled)
+- Review product details including quantities and frequencies
+- Access subscription-specific actions (modify, pause, resume)
+- View applied discount coupons and their validity
+
+**Business benefits:**
+- Customers can self-diagnose subscription issues
+- Transparent pricing and delivery information reduces confusion
+- Easy access to modify subscriptions increases flexibility
+- Visibility into coupon usage helps customers understand their savings
+
+**Technical features:**
+- Real-time data synchronization with backend
+- Support for multiple active subscriptions per customer
+- Conditional display based on subscription status
+- Filter toggle to show only active subscriptions when customers have multiple
+
+### 2. Order History & Tracking
+
+**What customers can do:**
+- View complete order history with delivery dates
+- Track upcoming deliveries with countdown information
+- See delivery status (scheduled, delivered, cancelled)
+- Download invoice PDFs for completed orders
+- View order details including products, quantities, and pricing
+- Review delivery notes and special instructions
+
+**Business benefits:**
+- Reduces "Where is my order?" support inquiries
+- Provides proof of delivery for dispute resolution
+- Transparent pricing breakdown builds trust
+- Historical data helps customers plan future orders
+
+**Technical features:**
+- Filters orders by payment status and delivery status
+- Shows only relevant upcoming deliveries (future and last 7 days)
+- Supports both subscription-based and one-off orders
+- Real-time delivery tracking integration
+
+### 3. Subscription Management Actions
+
+Customers can perform comprehensive subscription modifications:
+
+#### Modify Cart Contents
+- Add new products to existing subscriptions
+- Change quantities of subscribed products
+- Remove products from subscriptions
+- View updated pricing in real-time
+
+#### Change Delivery Frequency
+- Switch between available frequency options (weekly, bi-weekly, monthly)
+- See next delivery date adjust automatically
+- Understand pricing implications of frequency changes
+
+#### Reschedule Deliveries
+- Select new delivery dates from available windows
+- Respect postal code delivery schedules
+- View minimum notice periods for changes
+- Update delivery locations for supported carriers
+
+#### Pause & Resume
+- Pause subscriptions temporarily with reason selection
+- Set automatic resume dates (optional)
+- Resume paused subscriptions immediately
+- View pause history and reasons
+
+#### Cancel Subscriptions
+- Initiate cancellation with reason capture
+- Understand cancellation policies
+- Option to pause instead of cancel
+
+### 4. Account Information Management
+
+**What customers can do:**
+- Update contact information (name, email, phone)
+- Change delivery address and postal code
+- Set delivery instructions for drivers
+- Configure delivery location preferences for supported carriers (e.g., Dropp pickup points)
+- Manage email notification preferences
+
+**Business benefits:**
+- Accurate customer data reduces delivery failures
+- Postal code changes automatically update delivery schedules
+- Delivery instructions reduce failed delivery attempts
+- Current contact information improves communication effectiveness
+
+**Technical features:**
+- Postal code validation against delivery schedules
+- Automatic delivery date adjustment when postal code changes
+- Integration with carrier location services
+
+### 5. Payment Information
+
+**What customers can do:**
+- View payment method on file (masked for security)
+- Update credit card information
+- See payment history and status
+- Download invoices for accounting purposes
+
+**Business benefits:**
+- Customers can update expired cards proactively
+- Transparent payment history reduces disputes
+- Self-service payment updates reduce dunning failures
+- Invoice access reduces accounting support requests
+
+**Technical features:**
+- Secure payment tokenization
+- Integration with multiple payment processors
+- Automatic invoice generation
+
+### 6. Product Exchange Tracking (Returnable Items)
+
+For businesses with returnable products (e.g., bottle deposits, reusable containers):
+
+**What customers can do:**
+- View exchange balance (items owed by customer or business)
+- See detailed transaction history of delivered and returned items
+- Track cumulative balance over time
+- Understand charges and reimbursements for containers
+
+**Business benefits:**
+- Transparent deposit accounting reduces disputes
+- Customers understand their obligations
+- Automated tracking eliminates manual reconciliation
+- Historical record for compliance and auditing
+
+## User Experience Design
+
+### Multi-Tab Navigation
+
+The portal uses a clean, tabbed interface optimized for both desktop and mobile:
+
+1. **Overview Tab** - Primary landing page showing active subscriptions and upcoming deliveries
+2. **Order History Tab** - Complete order and delivery history with timeline view
+3. **Your Info Tab** - Account and delivery information management
+4. **Exchanges Tab** - Container/bottle exchange tracking (merchant-specific)
+
+### Mobile Optimization
+
+- Responsive design adapts to all screen sizes
+- Touch-friendly controls and buttons
+- Simplified layouts on mobile devices
+- Progressive enhancement for desktop features
+
+### Real-Time Updates
+
+- Changes reflect immediately without page refresh
+- Visual feedback for successful actions
+- Error handling with clear user messages
+- Loading states during data operations
+
+## White-Label Customization
+
+Journey's portal can be fully customized to match each merchant's brand and identity:
+
+### Branding
+- Custom color schemes matching merchant brand
+- Logo and cover image customization
+- Merchant-specific terminology and messaging
+
+### Feature Toggles
+- Show/hide specific features based on business model
+- Merchant-specific tabs and functionality
+- Conditional features (e.g., exchanges only for applicable businesses)
+
+### Integration Options
+- Custom delivery carrier integrations
+- Payment processor specific features
+- Merchant-specific product attributes
+
+## Support & Resources
+
+<CardGroup cols={2}>
+  <Card title="Customer Communication" icon="mail" href="/customer-engagement/communication">
+    Set up notifications, emails, and SMS messages to keep customers informed
+  </Card>
+  <Card title="Recurring Payments" icon="credit-card" href="/payments/recurring-payments">
+    Understand how recurring payments are collected and managed
+  </Card>
+  <Card title="Subscription Management" icon="repeat" href="/subscriptions/subscriptions">
+    Learn how subscriptions work in Journey
+  </Card>
+  <Card title="Delivery System" icon="truck" href="/subscriptions/delivery-fulfillment">
+    Understand delivery scheduling and fulfillment
+  </Card>
+</CardGroup>
+
+## Common Questions
+
+<AccordionGroup>
+  <Accordion title="Can customers cancel their own subscriptions?">
+    Yes, customers can initiate cancellation through their My Pages. You can configure whether cancellations are immediate or require support approval, and capture cancellation reasons for analysis.
+  </Accordion>
+  <Accordion title="How do delivery date changes affect fulfillment?">
+    When a customer changes a delivery date, Journey automatically updates the delivery schedule and notifies your fulfillment team. The system respects minimum notice periods you configure to avoid same-day changes.
+  </Accordion>
+  <Accordion title="What happens when a customer updates their payment method?">
+    Payment method updates are sent directly to your payment processor and tokenized securely. Future subscription charges will use the new payment method automatically.
+  </Accordion>
+  <Accordion title="Can customers see prices before making changes?">
+    Yes, all subscription modifications show updated pricing in real-time before the customer confirms changes. This includes prorated amounts for frequency changes and delivery fee adjustments.
+  </Accordion>
+  <Accordion title="Is the portal mobile-friendly?">
+    Absolutely. The portal is fully responsive and optimized for mobile devices, which is where most customers will access it from delivery confirmation emails and SMS messages.
+  </Accordion>
+  <Accordion title="Can I customize the My Pages features and look?">
+    Yes, Journey's allows extensive customization including branding, feature toggles, custom workflows, and integration with your specific carriers and payment processors.
+  </Accordion>
+</AccordionGroup>

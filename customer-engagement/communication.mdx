@@ -167,148 +167,6 @@ Track: {{ merchant_object.name }}.com/me
 **SMS Best Practices:** Keep messages under 160 characters, include merchant name, add tracking link if relevant, and use concise language.
 </Tip>
 
-## Delivery Channels
-
-### Email via Postmark
-
-Journey uses Postmark for enterprise-grade email delivery:
-
-**Features:**
-- HTML and plain text versions
-- Open tracking and click tracking
-- BCC to merchant email
-- PDF attachments (invoices)
-- Bounce and spam handling
-- Delivery webhooks
-
-**Configuration:**
-
-```python
-{
-  "name": "email",
-  "name_of_provider": "Postmark",
-  "token": "your-postmark-server-token"
-}
-```
-
-**Email capabilities:**
-```python
-{
-  "TrackOpens": True,
-  "Bcc": "orders@yourstore.com",
-  "MessageStream": "outbound",
-  "Attachments": [...]  // PDF invoices
-}
-```
-
-### SMS via Twilio or Nova
-
-Send SMS notifications via Twilio (international) or Nova (Iceland-specific).
-
-**Twilio Configuration:**
-
-```python
-{
-  "name": "sms",
-  "name_of_provider": "Twilio",
-  "token": "your-twilio-auth-token"
-}
-```
-
-**Nova Configuration:**
-
-```python
-{
-  "name": "sms",
-  "name_of_provider": "Nova",
-  "token": "your-nova-api-token"
-}
-```
-
-**Phone formatting:**
-- Twilio: International format (+1, +44, +354)
-- Nova: Automatically adds +354 for Iceland
-
-<Warning>
-Always validate phone numbers before sending SMS. Invalid numbers will fail silently with provider errors logged in `message_log`.
-</Warning>
-
-## Triggering Events
-
-### From Your Application
-
-Trigger events programmatically when key moments happen:
-
-```python
-from apps.communication.views import event_handler, EventHandles
-
-# After successful payment
-event_handler(
-    context={
-        'customer_object': customer,
-        'subscription_object': subscription,
-        'order_object': order,
-        'merchant_object': merchant,
-        'delivery_object': delivery
-    },
-    event_handle=EventHandles.SUBSCRIPTION_PAYMENT_SUCCESSFULLY_AUTHORIZED
-)
-```
-
-### With Automatic Context Enrichment
-
-Pass a `delivery_object` to automatically populate context:
-
-```python
-event_handler(
-    context={},  # Auto-populated from delivery
-    event_handle='delivery_complete',
-    delivery_object=delivery,
-    merchant_object=merchant
-)
-```
-
-**Automatically adds:**
-- `customer_object`
-- `customer_receiver_object` (for gifts)
-- `product_variation_object`
-- `subscription_object`
-- `delivery_object`
-
-<Info>
-Context enrichment saves you from manually passing common variables, reducing boilerplate code and preventing errors.
-</Info>
-
-### Scheduled Events (Cron)
-
-Events with `meta.type = 'time_and_filter'` run automatically:
-
-```json
-{
-  "name": "Delivery Reminder - 2 Days Ahead",
-  "handle": "inform_future_event",
-  "active": true,
-  "meta": {
-    "type": "time_and_filter",
-    "days_ahead": 2,
-    "hour_of_day": 9,
-    "paid": false
-  }
-}
-```
-
-**Cron job:**
-```bash
-# Runs hourly
-python manage.py inform_future_event
-```
-
-**Process:**
-1. Finds events with scheduling config
-2. Checks if current hour matches `hour_of_day`
-3. Finds deliveries `days_ahead` days out
-4. Sends notifications to qualifying customers
-
 ## Dunning (Payment Failures)
 
 Journey includes intelligent dunning that automatically manages payment failure communications.
@@ -413,7 +271,7 @@ Configure per merchant:
 ```
 
 <Info>
-Customers can update payment methods during the dunning period. The next retry automatically uses the new card, recovering the subscription.
+Customers can update payment methods during the dunning period. The next retry automatically uses the new card, recovering the subscription. See the [Delivery & Fulfillment](/subscriptions/delivery-fulfillment) page for more details on how dunning is managed end-to-end.
 </Info>
 
 ## Gift Orders
@@ -678,50 +536,6 @@ for tenant in Tenant.objects.all():
     with tenant_context(tenant):
         process_scheduled_events()
 ```
-
-## Testing
-
-### Test Mode
-
-When `TESTING=True`, communications use local providers:
-
-```python
-# Email → MailHog (localhost:1025)
-# SMS → Console output
-# All → Logged to message_log
-```
-
-### MailHog Setup
-
-View test emails at `http://localhost:8025`
-
-```bash
-# Start with Docker Compose
-docker compose up mailhog
-```
-
-### Testing Events
-
-```python
-# Set event to inactive for testing
-event.active = False
-event.save()
-
-# Trigger manually
-event_handler(
-    context={'customer_object': test_customer},
-    event_handle='test_event'
-)
-
-# Check message_log for results
-logs = message_log.objects.filter(
-    event_handle='test_event'
-).latest('created')
-```
-
-<Tip>
-Use inactive events to test message rendering without actually sending communications to customers.
-</Tip>
 
 ## Best Practices
 
