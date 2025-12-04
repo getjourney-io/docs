@@ -22,21 +22,25 @@
             ]
           },
           {
-            "group": "Subscriptions Guide",
+            "group": "Subscriptions & Deliveries",
             "pages": [
               "concepts/subscriptions",
               "concepts/delivery-subscriptions"
             ]
           },
           {
+            "group": "Payments & Claims",
+            "pages": [
+              "payments/recurring-payments",
+              "payments/dunning",
+              "payments/claims"
+            ]
+          },
+          {
             "group": "Core Concepts",
             "pages": [
               "concepts/communication",
-              "concepts/dunning",
-              "concepts/recurring-payments",
-              "concepts/reports",
-              "concepts/claims",
-              "concepts/delivery-fulfillment"
+              "concepts/reports"
             ]
           },
           {
