@@ -1,5 +1,5 @@
 ---
-title: "Recurring Payments"
+title: "Recurring Payments & Dunning"
 description: "Automated subscription billing with intelligent retry logic, multi-frequency support, and seamless payment processor integration"
 ---
 
@@ -24,12 +24,12 @@ Customer signs up with payment method verification
 System creates orders from subscription recipe based on item frequencies
 </Step>
 
-<Step title="Deliveries Scheduled">
-Each order gets a delivery or charge date (depending on whether the merchant is uses physical products or not)
+<Step title="Deliveries or Billing Day Scheduled">
+Each order gets a delivery or billing date (depending on whether the merchant is uses physical products or not)
 </Step>
 
 <Step title="Automated Charging">
-On delivery/charge date, system automatically charges the customer's payment method
+On the delivery/billing date, system automatically charges the customer's payment method
 </Step>
 
 <Step title="Status Updates">
@@ -45,7 +45,7 @@ Failed payments trigger automatic retry sequences with customer notifications
 
 ```mermaid
 graph TD
-    A[Delivery/Charge Date Arrives] -->|Midnight Cron| B[Create Payment Object]
+    A[Delivery/Billing Date Arrives] -->|Midnight Cron| B[Create Payment Object]
     B --> C{Payment Method Valid?}
     C -->|Yes| D[Charge Payment Processor]
     C -->|No| E[Mark as Failed]
@@ -82,15 +82,15 @@ graph LR
 
 <AccordionGroup>
   <Accordion title="New Charge" icon="plus">
-    Payment object created but not yet attempted. Occurs when delivery/charge date arrives and system creates initial payment record.
+    Payment object created but not yet attempted. Occurs when delivery/billing date arrives and system creates initial payment record.
 
     **Next Step:** Immediate charge attempt via payment processor
   </Accordion>
 
   <Accordion title="Authorized" icon="lock">
-    Payment method has been authorized (pre-authorized) but funds not yet captured. Common with Reepay and some Rapyd flows.
+    Payment method has been authorized (pre-authorized) but funds not yet captured. Common with payment processor flows.
 
-    **Next Step:** Capture funds when delivery ships
+    **Next Step:** Capture funds when delivery ships or billing date arrives
   </Accordion>
 
   <Accordion title="Settled" icon="circle-check">
@@ -205,61 +205,6 @@ Journey supports multiple payment processors with unified API:
 | **Reepay** | Europe | SEPA, cards, subscriptions | European expansion |
 | **Rapyd** | Global | 900+ payment methods | International markets |
 
-### Processor Configuration
-
-<Tabs>
-  <Tab title="Straumur">
-    ```json
-    {
-      "name": "Straumur",
-      "merchant_id": "your_merchant_id",
-      "terminal_identifier_gateway": "your_terminal_id",
-      "terminal_identifier_pos": "your_pos_terminal_id",
-      "shared_secret": "your_secret",
-      "payment_page_url": "https://test.straumur.is/payment/"
-    }
-    ```
-
-    **Capabilities:**
-    - Icelandic debit/credit cards
-    - Token-based recurring payments
-    - Pre-authorization and capture
-    - Refunds and voids
-  </Tab>
-
-  <Tab title="Reepay">
-    ```json
-    {
-      "name": "Reepay",
-      "private_key": "priv_...",
-      "webhook_secret": "whsec_..."
-    }
-    ```
-
-    **Capabilities:**
-    - European cards (SEPA region)
-    - Native subscription management
-    - Dunning built-in
-    - Webhook notifications
-  </Tab>
-
-  <Tab title="Rapyd">
-    ```json
-    {
-      "name": "Rapyd",
-      "access_key": "your_access_key",
-      "secret_key": "your_secret_key"
-    }
-    ```
-
-    **Capabilities:**
-    - 900+ payment methods globally
-    - Virtual card numbers
-    - Multi-currency support
-    - Compliance tools
-  </Tab>
-</Tabs>
-
 ### Processor Selection
 
 Journey **doesn't automatically select the payment processor**. Instead, it provides flexibility for merchants to configure which processor to use based on their business needs.
@@ -282,10 +227,6 @@ The system checks for a processor in this order:
 <Info>
 You can have multiple payment processors active at the same time. For example, use Straumur for Icelandic customers and Reepay for international customers within the same merchant account.
 </Info>
-
-<Warning>
-Once a subscription starts with a processor, changing processors mid-cycle requires customer re-verification and may interrupt service.
-</Warning>
 
 ## Automated Billing Cron
 
@@ -349,9 +290,16 @@ Journey provides comprehensive monitoring of the automated billing process:
 - Authorization decline spikes warrant investigation
 - Processing time exceeding thresholds
 
-## Payment Retry Logic
+## Payment Retry Logic & Dunning
 
-Journey implements intelligent retry logic based on error classification.
+**Dunning** is the process of automatically recovering failed payments through intelligent retries and customer communication. When a payment fails, Journey doesn't give up—it classifies the failure and retries using the most effective strategy for that error type.
+
+**Why it matters:**
+- Without dunning, 20-30% of subscriptions would churn unnecessarily from temporary payment issues
+- With intelligent dunning, 70-80% of failed payments successfully recover
+- Automated retries and customer notifications make it seamless for customers to fix issues
+
+Journey implements intelligent retry logic based on error classification:
 
 ### Error Classification
 
@@ -441,11 +389,6 @@ Journey implements safeguards to prevent excessive retry attempts:
 - Reduces payment processor fees from multiple failed attempts
 - Gives customers time to resolve underlying issues (add funds, update card, etc.)
 
-**Time Window:** Retries only occur after 8 AM local time
-- Avoids charging customers during overnight hours
-- Aligns with business hours when customers can respond
-- Reduces customer support inquiries about unexpected charges
-
 **Already Attempted Check:** System tracks the last attempt timestamp
 - Skips retry if already attempted today
 - Prevents duplicate charges if cron job runs multiple times
@@ -455,56 +398,22 @@ Journey implements safeguards to prevent excessive retry attempts:
 
 ### Adding Payment Methods
 
-<Steps>
-<Step title="Create Checkout Session">
-```bash
-POST /api/v1/straumur/create-session-add-card/
-{
-  "customer_id": 42,
-  "return_url": "https://yourstore.com/payment-success"
-}
-```
+Customers can easily add and manage their payment methods on their My Pages account.
 
-**Response:**
-```json
-{
-  "checkoutUrl": "https://checkout.straumur.is/...",
-  "session_id": "sess_abc123"
-}
-```
-</Step>
+**How It Works:**
 
-<Step title="Redirect Customer">
-Redirect customer to `checkoutUrl` for card entry and verification.
-</Step>
+1. **Go to My Pages** - Customer logs into My Pages and goes to the Payment Methods section
+2. **Add New Card** - Click "Add Payment Method" and securely enter their card details
+3. **Verification** - The system verifies the card
+4. **Set as Primary** - Customer can choose which card to use for their subscription
+5. **Auto-Billing** - On the next billing date, the selected card is automatically charged
 
-<Step title="Webhook Callback">
-Journey receives webhook when verification completes:
+**Multiple Cards:**
+Customers can add multiple payment methods and switch between them at any time. This is especially useful if they want to use different cards for different subscriptions, or if their primary card expires.
 
-```json
-{
-  "event": "payment_method.verified",
-  "payment_method_id": "pm_xyz789",
-  "card_last_four": "4242",
-  "card_type": "visa",
-  "expiry": "12/2027"
-}
-```
-</Step>
-
-<Step title="Set as Primary">
-```python
-payment_method = PaymentMethod.objects.get(id="pm_xyz789")
-payment_method.status = "active"
-payment_method.save()
-
-customer.primary_payment_method = payment_method
-customer.save()
-```
-
-**Result:** Next billing cycle uses new card
-</Step>
-</Steps>
+<Info>
+Customers can update their payment method anytime on My Pages—even during a failed payment recovery period. The next automatic retry will use their updated card.
+</Info>
 
 ### Updating During Dunning
 
@@ -529,44 +438,11 @@ This seamless recovery is a key feature - customers can fix payment issues witho
 
 ## Refunds and Adjustments
 
-### Full Refund
-
 **Process:**
 - Merchant initiates refund for the entire payment amount
 - System calls the payment processor's refund API
 - If successful, payment status updates to `REFUNDED`
 - Customer receives credit to their original payment method
-
-### Partial Refund
-
-**Process:**
-- Merchant specifies a specific amount to refund (e.g., for a damaged item)
-- System calls processor API with the partial amount
-- Refund amount is tracked separately from original payment amount
-- Customer receives partial credit while payment remains in their history
-
-### Refund Timeline
-
-<Steps>
-<Step title="Refund Requested">
-Merchant initiates refund via admin or API
-</Step>
-
-<Step title="Processor API Call">
-Journey calls payment processor refund endpoint
-</Step>
-
-<Step title="Bank Processing">
-**Timeframes:**
-- Straumur: 3-5 business days
-- Reepay: 5-7 business days
-- Rapyd: Varies by country (3-10 days)
-</Step>
-
-<Step title="Customer Sees Credit">
-Refund appears on customer's bank statement
-</Step>
-</Steps>
 
 <Warning>
 Refunds cannot be reversed once processed. Always confirm amount and reason before executing.
@@ -576,54 +452,43 @@ Refunds cannot be reversed once processed. Always confirm amount and reason befo
 
 Journey automatically generates invoices for every successful payment.
 
-### Invoice Data Model
+### What's Included on Invoices
 
-```json
-{
-  "payment_id": "pay_123",
-  "invoice_number": "INV-2025-001234",
-  "customer": {
-    "name": "Jón Jónsson",
-    "address": "Laugavegur 1, 101 Reykjavík"
-  },
-  "line_items": [
-    {
-      "description": "Fresh Milk × 2",
-      "unit_price": 500,
-      "quantity": 2,
-      "total": 1000
-    },
-    {
-      "description": "Delivery Fee",
-      "unit_price": 500,
-      "quantity": 1,
-      "total": 500
-    }
-  ],
-  "subtotal": 1500,
-  "tax": 360,
-  "total": 1860,
-  "payment_method": "Visa •••• 4242",
-  "payment_date": "2025-11-01T12:34:56Z"
-}
-```
+Each invoice includes:
+- **Order Details** - Items ordered, quantities, and prices
+- **Delivery Fee** - If applicable
+- **Subtotal & Tax** - Clear cost breakdown
+- **Payment Method** - Last 4 digits of the card used
+- **Payment Date** - When the charge was processed
+- **Next Billing Date** - When the next charge will occur
 
 ### Auto-Send Invoices
 
-Enable automatic invoice delivery per customer through their account settings. When enabled:
+Customers can enable automatic invoice delivery through their My Pages settings. When enabled:
 
-**Trigger:** After every successful payment settlement
+**Trigger:** After every successful payment settles
 
-**Email Contents:**
-- PDF invoice attachment
-- HTML summary in email body
-- Payment confirmation details
-- Next billing date information
+**How It Works:**
+- Customers check "Send me invoices automatically" on My Pages
+- After each payment, they receive an email with the invoice PDF attached
+- They can also print or forward invoices as needed
 
 **Configuration:**
-- Enabled per-customer (not global)
+- Each customer controls this setting individually
 - Can be toggled on/off at any time
-- Immediate effect on next payment
+- Takes effect on the next payment
+
+### Invoice History
+
+All invoices are always available in the **Order History** section of My Pages:
+
+- **View Anytime** - Customers can access any past invoice without relying on email
+- **Download** - Invoices can be downloaded as PDF for record-keeping or accounting
+- **Print** - Print directly from My Pages for records or receipts
+
+<Info>
+Customers have two ways to access invoices: via email (if auto-send is enabled) or anytime through their Order History on My Pages.
+</Info>
 
 ## Stock Management Integration
 
@@ -675,7 +540,7 @@ Journey never stores raw card data:
 ```
 Customer enters card
     ↓
-Directly to processor (Straumur/Reepay/Rapyd)
+Directly to processor
     ↓
 Processor returns token
     ↓
@@ -726,146 +591,34 @@ All processors support 3D Secure authentication:
 - Role-based permissions
 - Audit logging for all payment actions
 
-## Best Practices
-
-<AccordionGroup>
-  <Accordion title="Always Verify Payment Methods" icon="shield-check">
-    Before activating subscriptions, verify payment methods through processor checkout flows. This reduces first-payment failures by 80%.
-  </Accordion>
-
-  <Accordion title="Set Appropriate Retry Limits" icon="repeat">
-    Default 20 attempts works for most businesses. Reduce to 10-15 for high-value subscriptions to limit exposure. Increase to 25-30 for low-value, high-retention products.
-  </Accordion>
-
-  <Accordion title="Monitor Payment Failure Rates" icon="chart-line">
-    Healthy businesses see 5-10% payment failure rates. Above 15% indicates issues:
-    - Expired cards not updated
-    - Pricing too aggressive
-    - Poor dunning communication
-  </Accordion>
-
-  <Accordion title="Offer Self-Service Updates" icon="user-gear">
-    Enable customers to update payment methods without support contact. This recovers 40% of failed payments within 48 hours.
-  </Accordion>
-
-  <Accordion title="Communicate Before Charging" icon="bell">
-    Send delivery reminders 1-2 days before charging. This gives customers time to update cards and reduces "unexpected charge" disputes by 60%.
-  </Accordion>
-
-  <Accordion title="Use Multi-Frequency Strategically" icon="calendar-days">
-    Batch items with similar frequencies (weekly, bi-weekly, monthly) to optimize transaction fees while maintaining flexibility.
-  </Accordion>
-
-  <Accordion title="Implement Grace Periods" icon="clock">
-    For delivered-but-unpaid scenarios, continue retry attempts beyond normal limits since customer received goods. This protects revenue while maintaining goodwill.
-  </Accordion>
-
-  <Accordion title="Track Processor Performance" icon="gauge">
-    Monitor success rates by processor. Straumur: 92%+, Reepay: 88%+, Rapyd: 85%+ are healthy benchmarks. Switch processors if consistently below.
-  </Accordion>
-</AccordionGroup>
-
-## Troubleshooting
-
-### High Decline Rates
-
-**Symptoms:**
-- >15% of payments failing
-- Many "insufficient funds" errors
-- High churn rate
-
-**Solutions:**
-1. **Optimize billing dates** - Align with paydays (1st, 15th of month)
-2. **Pre-charge notifications** - Remind customers 24-48 hours ahead
-3. **Retry timing** - Try early morning (better success rates)
-4. **Payment method diversity** - Accept multiple payment types
-
-### Stuck Authorizations
-
-**Symptoms:**
-- Payments remain "authorized" for days
-- Customers see pending charges
-- Revenue not captured
-
-**Solutions:**
-1. **Check auto-capture settings**
-2. **Manual capture** - `POST /api/v1/payment/{id}/capture`
-3. **Monitor authorization expiry** - Capture within 7 days
-4. **Enable auto-capture** - In processor settings
-
-### Webhook Failures
-
-**Symptoms:**
-- Payment status not updating
-- Missing refund confirmations
-- Delayed subscription status changes
-
-**Solutions:**
-1. **Verify webhook URLs** - Check processor dashboard
-2. **Test webhook endpoint** - `POST /webhooks/straumur/test`
-3. **Check webhook secrets** - Ensure correct verification
-4. **Review logs** - `/var/log/webhooks.log`
-
-## API Reference
-
-<CardGroup cols={3}>
-  <Card title="Create Payment" icon="plus" href="/api/payments/create">
-    Create new payment
-  </Card>
-  <Card title="Get Payment" icon="eye" href="/api/payments/get">
-    Retrieve details
-  </Card>
-  <Card title="Charge Payment" icon="credit-card" href="/api/payments/charge">
-    Execute charge
-  </Card>
-  <Card title="Capture Authorization" icon="lock-open" href="/api/payments/capture">
-    Capture pre-auth
-  </Card>
-  <Card title="Refund Payment" icon="rotate-left" href="/api/payments/refund">
-    Process refund
-  </Card>
-  <Card title="Payment History" icon="clock-rotate-left" href="/api/payments/history">
-    View transaction log
-  </Card>
-  <Card title="Add Payment Method" icon="wallet" href="/api/payment-methods/add">
-    Add customer card
-  </Card>
-  <Card title="Update Primary Method" icon="star" href="/api/payment-methods/set-primary">
-    Change default card
-  </Card>
-  <Card title="Delete Payment Method" icon="trash" href="/api/payment-methods/delete">
-    Remove card
-  </Card>
-</CardGroup>
-
 ## Related Concepts
 
 <CardGroup cols={2}>
   <Card
     title="Subscriptions"
     icon="repeat"
-    href="/concepts/subscriptions"
+    href="/subscriptions/subscriptions"
   >
     Understand subscription lifecycle and how payments integrate with recurring orders
   </Card>
   <Card
-    title="Dunning Management"
-    icon="triangle-exclamation"
-    href="/concepts/dunning"
+    title="Invoice Claims"
+    icon="receipt"
+    href="/payments/claims"
   >
-    Deep dive into payment failure recovery and customer retention strategies
+    Understand Icelandic invoice claims as an alternative payment method
   </Card>
   <Card
     title="Communications"
     icon="envelope"
-    href="/concepts/communication"
+    href="/customer-communication/communication"
   >
     Learn how payment events trigger automated customer notifications
   </Card>
   <Card
     title="Reports & Analytics"
     icon="chart-bar"
-    href="/concepts/reports"
+    href="/analytics/reports"
   >
     Track payment performance, revenue metrics, and failure analysis
   </Card>
