@@ -7,10 +7,6 @@ description: "Generate actionable insights from subscription, payment, and deliv
 
 Journey's reporting system transforms raw transactional data into actionable business insights. The platform includes 8 pre-built reports covering critical business metrics, with the ability to create custom reports using simple SQL queries.
 
-<Info>
-All reports are multi-tenant aware and automatically filtered to your merchant's data. Export any report to Excel for further analysis.
-</Info>
-
 ## Why Reports Matter
 
 Reports provide the data-driven insights needed to:
@@ -239,442 +235,121 @@ graph TB
 All reports show a live preview of your data. The table displays the first 5 rows, but Excel exports include all matching records.
 </Info>
 
-## Dashboard Analytics
+## Overview Dashboard
 
-Beyond custom reports, Journey provides real-time analytics on the dashboard overview page:
+The Overview page serves as your merchant dashboard home, providing real-time business metrics and customer activity monitoring. This single-page view gives you immediate visibility into subscription health, revenue trends, and customer behavior.
+
+<Info>
+Access the Overview dashboard immediately after logging into your merchant portal. All metrics update in real-time as customers interact with your business.
+</Info>
 
 ### Key Metrics
 
-<Tabs>
-<Tab title="Subscription Health">
+The Overview dashboard shows three important numbers at the top:
 
-**Active Subscriptions Count**
-- Total number of subscriptions with `status='active'`
-- Real-time count from your subscription table
+**Active Subscriptions** - How many customers are currently active
 
-**Average Deliveries per Subscription**
-- Calculated across all subscription-based orders
-- Indicates customer retention and lifetime value
+**Average Deliveries per Subscription** - How often your customers are ordering (higher = better retention)
 
-**Average Lifetime Value (LTV)**
-- Total settled payment value divided by active subscriptions
-- Critical metric for customer acquisition cost (CAC) optimization
+**Lifetime Value** - Average revenue per active subscription
 
-</Tab>
+<Tip>
+Track your lifetime value (LTV) compared to customer acquisition cost (CAC). Healthy subscription businesses have an LTV:CAC ratio of 3:1 or higher.
+</Tip>
 
-<Tab title="Delivery Metrics">
+### Live Activity Feed
 
-**Successful Deliveries by Product**
-- Breakdown of subscription vs. one-off deliveries
-- Filterable by date range
-- Grouped by product and variation
+See what customers are doing in real-time:
+- New signups
+- Delivery date changes
+- Subscription pauses and resumes
+- Frequency changes
 
-**Deliveries per Day/Week**
-- Time-series visualization of delivery volume
-- Helps identify operational capacity needs
-- Supports route planning optimization
+This helps you spot patterns and verify that your customer portal is working smoothly.
 
-</Tab>
+### Dashboard Charts & Tables
 
-<Tab title="Signup Analytics">
+Select a date range (last 7, 30, or 90 days) to view:
+
+**Subscription Status Trends**
+- How your active, paused, and past-due subscription counts are changing
+- Look for steady growth in active subscriptions
+- Watch for unexpected spikes in past-due (payment issues) or on-hold (engagement issues)
+
+**Product Revenue Breakdown**
+- Top 5 products by revenue
+- Helps with inventory planning and marketing focus
+
+**Successful Deliveries**
+- How many times each product was delivered (subscription vs. one-off)
+- Helps forecast demand and plan fulfillment capacity
 
 **New Subscription Signups**
-- Daily/weekly/monthly signup counts (auto-adjusts based on date range)
-- Product-level breakdown showing which products drive growth
-- Excludes incomplete subscriptions
+- Which products customers are subscribing to
+- Whether signups are growing or declining
+- Good indicator of marketing effectiveness
 
-**Daily Signup Chart**
-- Visual trend line of subscription growth
-- Automatically switches between daily, weekly, or monthly buckets based on date range selected
+### When to Check
 
-</Tab>
+- **Daily** - Glance at active subscriptions and live activity for health check
+- **Weekly** - Review revenue and signups to inform business decisions
+- **Monthly** - Deep dive into trends for strategic planning
 
-<Tab title="Activity Tracking">
+## Requesting Custom Reports
 
-**Recent Customer Activity**
-- New customer signups
-- Delivery date changes
-- Subscription status changes (pause, resume, cancel)
-- Subscription frequency modifications
+The built-in reports cover most common use cases, but you might need something specific to your business.
 
-**Production Events** (for relevant merchants)
-- Filling events for tracked products
-- Tank changes and capacity monitoring
-- Weight tracking per filling
+### When to Request a Custom Report
 
-</Tab>
-</Tabs>
+You should request a custom report if you need to:
+- **Analyze specific customer segments** - e.g., "Show me all customers who paused their subscription in the last 30 days"
+- **Track unusual metrics** - e.g., "Show customers with the longest average time between purchases"
+- **Monitor performance** - e.g., "Weekly report of churn rate by subscription type"
+- **Financial analysis** - e.g., "Revenue by postal code" or "Payment success rates by payment method"
+- **Operational insights** - e.g., "Orders that failed delivery twice"
 
-<Warning>
-Dashboard metrics are calculated in real-time from your database. For large date ranges (90+ days), some queries may take a few seconds to load.
-</Warning>
+### What to Include in Your Request
 
-## Creating Custom Reports
+When requesting a custom report, provide:
 
-Adding a new report to Journey requires minimal code and can be done in minutes.
+1. **Report name** - What you want to call it (e.g., "High-Value Customers")
+2. **Data you need** - What columns or information matter (e.g., customer name, total spent, last purchase date)
+3. **Filters** - Any conditions to narrow results (e.g., only customers with 5+ purchases, or only from last 90 days)
+4. **How often** - Do you need this once, weekly, or ongoing?
+5. **Export format** - Usually Excel, but let us know if different
 
-### How Easy It Is
+### Example Request
 
-Journey's reporting system is built on a simple, declarative architecture. Each report is defined by:
+**Report Name:** "High-Value Customers"
 
-1. **Title** - Display name for the report
-2. **Date Range Toggle** - Whether to show date picker (true/false)
-3. **SQL Query** - A single SQL query that returns the data
+**What you want to see:**
+- Customer name and email
+- Total amount they've spent
+- Number of successful payments
+- When they last paid
 
-<Steps>
-<Step title="Define Your Report">
+**Filters:**
+- Only customers with 5 or more successful payments
+- Sort by highest revenue first
 
-Add a new object to the `reports` array in `apps/me/app/dashboard/(main)/overview/actions.ts`:
+**Frequency:** Monthly
 
-```typescript
-{
-  title: "Your Report Name" as const,
-  dateRangePicker: true, // or false
-  sql: (fromDate: Date, toDate: Date) => sql`
-    SELECT
-      column1,
-      column2,
-      COUNT(*) as count
-    FROM your_table
-    WHERE created_at >= ${fromDate}
-    AND created_at < (${toDate}::date + INTERVAL '1 day')
-    GROUP BY column1, column2
-    ORDER BY count DESC
-  `
-}
-```
+### What Happens Next
 
-</Step>
+Once you request a report:
 
-<Step title="Add Translations (Optional)">
+1. **Our team reviews** - We make sure the data can be extracted and is meaningful
+2. **We build it** - Takes a few days typically
+3. **We test it** - Verify it shows the right data
+4. **We add it** - New report appears in your reports sidebar
+5. **You use it** - Access anytime, export to Excel, view trends
 
-Add display names and descriptions in the translation files:
+### Report Privacy & Security
 
-```typescript
-// In Reports.tsx
-const titleI18nLut = {
-  // ... existing reports
-  "Your Report Name": t("your-report-name"),
-}
-
-const descriptionI18nLut = {
-  // ... existing reports
-  "Your Report Name": t("your-report-description"),
-}
-```
-
-</Step>
-
-<Step title="Test and Deploy">
-
-The report automatically appears in the reports sidebar. Click it to test:
-- Verify SQL query returns expected columns
-- Test date range filtering (if enabled)
-- Export to Excel to confirm data export works
-
-</Step>
-</Steps>
-
-### Best Practices for Custom Reports
-
-<AccordionGroup>
-<Accordion title="Query Performance">
-
-**Use Indexes:**
-- Ensure frequently queried columns have database indexes
-- Pay special attention to date columns used in WHERE clauses
-
-**Limit Results:**
-- Consider adding `LIMIT` clauses for very large datasets
-- The UI shows first 5 rows, but Excel exports all rows
-
-**Aggregate When Possible:**
-- Use `GROUP BY` and aggregation functions (COUNT, SUM, AVG)
-- Reduces result set size and improves readability
-
-</Accordion>
-
-<Accordion title="Multi-Tenant Awareness">
-
-All reports automatically execute within the merchant's tenant context. You don't need to manually filter by `merchant_id`.
-
-**Automatic Tenant Isolation:**
-```typescript
-// Journey automatically handles this
-// You write:
-SELECT * FROM order_subscription WHERE subscription_status = 'active'
-
-// Behind the scenes, queries execute within tenant schema
-// Result: Only your merchant's data is returned
-```
-
-**Cross-Schema Queries:**
-If you need to query across tenants (superuser reports only), use the statistics endpoint instead of the reports system.
-
-</Accordion>
-
-<Accordion title="Data Privacy">
-
-**Customer PII:**
-- Be mindful of including sensitive data (SSN, payment details)
-- Consider access controls for reports containing PII
-- Use reports for internal business analysis only
-
-**Export Security:**
-- Excel exports contain full datasets
-- Educate users about secure file handling
-- Consider implementing audit logs for report access
-
-</Accordion>
-</AccordionGroup>
-
-### Example: Custom Report
-
-Let's create a report showing "High-Value Customers" (customers with 5+ successful payments):
-
-```typescript
-{
-  title: "High-Value Customers" as const,
-  dateRangePicker: false,
-  sql: (fromDate: Date, toDate: Date) => sql`
-    SELECT
-      c.full_name AS "Customer Name",
-      c.email AS "Email",
-      COUNT(DISTINCT p.id) AS "Successful Payments",
-      SUM(
-        (line_items->>'amount')::numeric
-      ) AS "Total Revenue",
-      MAX(p.created) AS "Last Payment Date"
-    FROM order_customer c
-    JOIN order_order o ON o.customer_id_id = c.id
-    JOIN order_payment p ON p.order_id_id = o.id
-    WHERE p.payment_status = 'settled'
-    GROUP BY c.id, c.full_name, c.email
-    HAVING COUNT(DISTINCT p.id) >= 5
-    ORDER BY "Total Revenue" DESC
-  `
-}
-```
-
-This report:
-- ✅ Uses clear column aliases with proper casing
-- ✅ Aggregates data to reduce result size
-- ✅ Sorts by most important metric (revenue)
-- ✅ Filters for business-relevant threshold (5+ payments)
-- ✅ Doesn't need date range (analyzing all-time data)
-
-## Technical Architecture
-
-Temporarily removed for debugging.
-
-## Analytics Snapshots
-
-Journey includes a scheduled job that captures daily snapshots of key metrics for historical trend analysis.
-
-<Info>
-**Automated Tracking:** The `take_analytics_snapshot` command runs daily via cron to record:
-- Subscription status distribution (active, past_due, on_hold)
-- Total customer count
-- Stored in `statistic_timestampevent` table
-</Info>
-
-### Snapshot Data
-
-**Subscription Status Snapshots:**
-```json
-{
-  "title": "subscription_status_snapshot",
-  "data": [
-    {"subscription_status": "active", "count": 1247},
-    {"subscription_status": "past_due", "count": 89},
-    {"subscription_status": "on_hold", "count": 45}
-  ]
-}
-```
-
-**Customer Count Snapshots:**
-```json
-{
-  "title": "customer_count",
-  "data": 3542
-}
-```
-
-### Using Snapshots in Reports
-
-Snapshots enable trend analysis over time. Example query:
-
-```sql
-SELECT
-  s.timestamp as date,
-  s.entry->>'subscription_status' as status,
-  s.entry->>'count' as count
-FROM (
-  SELECT t.timestamp, jsonb_array_elements(t.data) as entry
-  FROM statistic_timestampevent t
-  WHERE t.title = 'subscription_status_snapshot'
-) as s
-WHERE s.entry->>'subscription_status' IN ('active', 'past_due', 'on_hold')
-  AND s.timestamp >= '2024-01-01'
-ORDER BY s.timestamp
-```
-
-## Multi-Tenant Statistics
-
-For superusers managing multiple merchants, Journey provides a cross-tenant statistics view.
-
-<Warning>
-**Superuser Access Required:** This view is restricted to superusers and shows aggregated metrics across all tenants.
-</Warning>
-
-### Statistics Dashboard
-
-Access at `/admin/stats/` to view:
-
-**Per-Tenant Metrics:**
-- Active subscriptions count
-- Total subscriptions (all statuses)
-- Total deliveries (all time)
-- Deliveries this week vs. last week
-- Deliveries this month vs. last month
-- Deliveries this year vs. last year
-- Percentage change calculations
-
-**Aggregate Metrics:**
-- "Total" row showing sum across all tenants
-- Delta calculations for growth tracking
-
-### Implementation
-
-```python
-# apps/statistic/views.py
-def stats_per_tenant(tenant):
-    with tenant_context(tenant):
-        active_subscriptions = subscription.objects.filter(
-            subscription_status='active'
-        ).count()
-
-        # Weekly deliveries
-        start_this_week, end_this_week = get_start_end_of_week(today)
-        deliveries_this_week = delivery.objects.filter(
-            delivery_date__date__range=[start_this_week, end_this_week]
-        ).count()
-
-        # ... more metrics
-
-    return {
-        'active_subscriptions': active_subscriptions,
-        'deliveries_this_week': deliveries_this_week,
-        # ... more data
-    }
-```
-
-## Best Practices
-
-<AccordionGroup>
-<Accordion title="Report Usage">
-
-**For Merchants:**
-- Review dunning report weekly to recover at-risk revenue
-- Export payment data monthly for accounting reconciliation
-- Track abandoned carts weekly for marketing campaigns
-- Monitor delivery changes to optimize fulfillment
-
-**For Developers:**
-- Keep SQL queries focused and performant
-- Use meaningful column aliases for exported Excel files
-- Test reports with large date ranges before deploying
-- Document business logic in SQL comments
-
-</Accordion>
-
-<Accordion title="Data Accuracy">
-
-**Query Construction:**
-- Always use parameterized queries (SQL template tags)
-- Handle NULL values explicitly in aggregations
-- Use proper date truncation for time-series data
-- Test edge cases (empty results, single row, millions of rows)
-
-**Date Handling:**
-- Use `(toDate::date + INTERVAL '1 day')` for inclusive date ranges
-- Always filter on indexed timestamp columns
-- Consider timezone implications for global merchants
-
-</Accordion>
-
-<Accordion title="User Experience">
-
-**Report Design:**
-- Limit columns to essential information (10-15 max)
-- Sort results by most actionable metric (revenue, attempt count, etc.)
-- Use clear column names that make sense in Excel exports
-- Provide descriptions explaining report purpose and use cases
-
-- **Performance:**
-- Target &lt;2 second query execution time
-- Show loading states for long-running queries
-- Consider pagination for reports with 10,000+ rows
-- Cache results when data doesn't change frequently
-
-</Accordion>
-</AccordionGroup>
-
-## Troubleshooting
-
-<AccordionGroup>
-<Accordion title="Report Not Loading">
-
-**Symptoms:** Report shows loading state indefinitely
-
-**Solutions:**
-1. Check browser console for JavaScript errors
-2. Verify SQL query syntax is correct
-3. Test query directly in database with tenant context
-4. Check for missing indexes on filtered columns
-5. Verify date range parameters are valid
-
-</Accordion>
-
-<Accordion title="Empty Results">
-
-**Symptoms:** Report loads but shows "No data found"
-
-**Solutions:**
-1. Verify data exists in database for selected date range
-2. Check tenant context is correct (not querying wrong merchant)
-3. Review WHERE clause conditions (too restrictive?)
-4. Test query without date filters to isolate issue
-5. Confirm report is configured for correct dateRangePicker setting
-
-</Accordion>
-
-<Accordion title="Export Fails">
-
-**Symptoms:** Excel download button doesn't work or file is corrupted
-
-**Solutions:**
-1. Check browser console for download errors
-2. Verify report data contains no invalid characters
-3. Test with smaller date range (large datasets may timeout)
-4. Ensure `downloadExcel` utility handles all data types in results
-5. Check for NULL values or special characters in string columns
-
-</Accordion>
-
-<Accordion title="Slow Query Performance">
-
-**Symptoms:** Report takes >10 seconds to load
-
-**Solutions:**
-1. Add database indexes on filtered/joined columns
-2. Review query execution plan (`EXPLAIN ANALYZE`)
-3. Consider pre-aggregating data in materialized view
-4. Reduce date range to smaller time windows
-5. Add LIMIT clause if full dataset isn't needed
-
-</Accordion>
-</AccordionGroup>
+All custom reports:
+- **Show only your data** - Reports automatically filter to only your merchant's information
+- **Can be confidential** - We handle any sensitive data (customer SSN, payment info) carefully
+- **Are auditable** - We keep records of who requested and accessed reports
 
 ## Related Concepts
 
@@ -686,13 +361,4 @@ Learn how reports integrate with automated customer notifications
 <Card title="Recurring Payments" icon="credit-card" href="/payments/recurring-payments">
 Understand the payment data that powers financial reports
 </Card>
-
-<Card title="Dunning" icon="bell" href="/payments/dunning">
-Deep dive into the dunning report and payment recovery strategies
-</Card>
-
-<Card title="Subscriptions" icon="repeat" href="/subscriptions/subscriptions">
-Explore subscription statuses and lifecycle management
-</Card>
-</CardGroup>
 

@@ -5,7 +5,7 @@ description: "Build automated, event-driven email and SMS workflows with intelli
 
 ## What are Communications?
 
-**Communications** in Journey are event-driven messages automatically sent to customers at key moments in their journey. Journey's system supports multi-channel delivery (email, SMS), dynamic template rendering, and intelligent dunning sequences—all managed through a simple event-based API.
+**Communications** in Journey are event-driven messages automatically sent to customers at key moments in their journey. Journey's system supports multi-channel delivery (email, SMS), dynamic template rendering, and intelligent dunning sequences, all managed through a simple event-based API.
 
 <Info>
 **Key Innovation:** Journey's communication system automatically enriches messages with contextual data (customer, order, subscription) and supports separate messaging for gift recipients, making complex notification flows simple to implement.
@@ -147,7 +147,7 @@ Delivery address:
 {{ customer_receiver_object.address }}
 {{ customer_receiver_object.postal_code }} {{ customer_receiver_object.city }}
 
-Track your order: https://{{ merchant_object.name }}.com/orders/{{ order_object.id }}
+Track your order: https://{{ merchant_object.name }}.getjourney.io/orders/{{ order_object.id }}
 
 Questions? Reply to this email or contact {{ merchant_object.reply_to_email }}.
 
@@ -160,7 +160,7 @@ The {{ merchant_object.name }} Team
 ```django
 Hi {{ customer_object.full_name }}! Your {{ merchant_object.name }} delivery
 arrives {{ delivery_object.delivery_date|date:"M j" }}.
-Track: {{ merchant_object.name }}.com/me
+Track: {{ merchant_object.name }}.getjourney.io/me
 ```
 
 <Tip>
@@ -293,15 +293,8 @@ graph LR
 
 Specify who receives each message:
 
-```json
-{
-  "receiver": "customer"           // Person who placed order
-}
-
-{
-  "receiver": "customer_receiver"  // Delivery recipient
-}
-```
+- **Receiver: customer** - The person who placed the order
+- **Reveiver: customer_receiver** - The delivery recipient
 
 ### Example: Gift Notifications
 
@@ -349,371 +342,140 @@ When `customer_receiver_object` equals `customer_object` (self-gift), Journey au
 
 ## Invoice Delivery
 
-Automatically email PDF invoices after successful payments.
+Customers can choose to receive automatic PDF invoices via email after each payment settles.
 
-### Invoice Flow
+### How It Works
 
-<Steps>
-<Step title="Enable for Customer">
-```python
-customer.auto_send_invoices = True
-customer.save()
-```
-</Step>
+**Enabling Automatic Invoices:**
+- Customers go to their **My Pages** settings
+- Check the option to "Send me invoices automatically"
+- After each payment processes, they receive an email with the invoice PDF attached
 
-<Step title="Payment Settles">
-System detects successful payment
-</Step>
-
-<Step title="Generate PDF">
-```python
-pdf_bytes = generate_invoice_pdf(
-    payment_id=payment.id,
-    tenant_schema=connection.schema_name
-)
-```
-
-**PDF generation endpoint:**
-```
-GET /me/pdf-invoice/{payment_id}
-Host: {tenant}.yourdomain.com
-X-Secret: {database_password}
-```
-</Step>
-
-<Step title="Attach to Email">
-```python
-pdf_attachment = {
-    'filename': f"invoice-{payment_id}.pdf",
-    'content': pdf_bytes,
-    'mimetype': 'application/pdf'
-}
-```
-</Step>
-
-<Step title="Send via Event Handler">
-```python
-event_handler(
-    context={'pdf_attachment': pdf_attachment},
-    event_handle=EventHandles.INVOICE_SENT_AUTOMATICALLY,
-    delivery_object=delivery
-)
-```
-</Step>
-</Steps>
+**Accessing Invoice History:**
+- All previous invoices are available in the **Order History** section of My Pages
+- Customers can view, download, and print invoices anytime without needing to search their email
 
 <Info>
-Invoice emails include both HTML summary and PDF attachment, giving customers choice of format for accounting/record-keeping.
+This gives customers flexibility: they can choose email delivery for immediate access, or access all invoices later through their account history on My Pages.
 </Info>
 
 ## Message Logs
 
-Every communication is logged with complete details for debugging and analytics.
+Every email and SMS sent to customers is logged so you can track delivery and troubleshoot issues.
 
-### Log Structure
+### What Gets Logged
 
-```typescript
-{
-  id: string;
-  phone_number?: string;        // For SMS
-  email?: string;               // For email
-  customer_id: string;
-  content: string;              // What was sent
-  response: string;             // Provider response
-  status: 'sent' | 'failed';
-  event_handle: string;         // Which event triggered it
-  created: timestamp;
-}
-```
+For each message sent, the system records:
+- **Recipient** - Customer email or phone number
+- **Content** - What was sent
+- **Status** - Whether it was successfully delivered or failed
+- **Timestamp** - When it was sent
+- **Reason for message** - Which event triggered it (e.g., payment received, delivery arriving tomorrow)
 
-### Querying Logs
+### Viewing Delivery Status
 
-```python
-# Find all messages to a customer
-logs = message_log.objects.filter(
-    customer_id=customer
-).order_by('-created')
+You can check whether a message was successfully delivered or if there was an issue:
+- **Sent** - Message delivered to the provider (email/SMS carrier)
+- **Failed** - Message couldn't be delivered (e.g., invalid email address, carrier rejected SMS)
 
-# Failed messages in last 24 hours
-failed = message_log.objects.filter(
-    status='failed',
-    created__gte=timezone.now() - timedelta(days=1)
-)
+If a message fails, you can investigate why and take action—like requesting an updated email address from the customer or checking if their phone number is correct.
 
-# Count by event type
-stats = message_log.objects.values('event_handle').annotate(
-    count=Count('id')
-)
-```
+<Info>
+Message logs help you ensure customers are receiving important notifications about their orders, payments, and deliveries. Use them to troubleshoot communication issues and improve delivery rates.
+</Info>
 
-### Provider Responses
+## White-Label Support
 
-<Tabs>
-  <Tab title="Postmark Success">
-    ```json
-    {
-      "MessageID": "b7bc2f4a-e38e-4336-af7d-e6c392c2f817",
-      "To": "customer@example.com",
-      "SubmittedAt": "2025-10-15T12:00:00Z",
-      "ErrorCode": 0
-    }
-    ```
-  </Tab>
+Journey's communication system supports complete white-labeling for each merchant.
 
-  <Tab title="Postmark Error">
-    ```json
-    {
-      "ErrorCode": 300,
-      "Message": "Invalid email address"
-    }
-    ```
-  </Tab>
+### Your Brand, Your Communications
 
-  <Tab title="Twilio Success">
-    ```json
-    {
-      "sid": "SM1234567890abcdef",
-      "status": "queued",
-      "to": "+3547771234"
-    }
-    ```
-  </Tab>
-</Tabs>
+Each merchant can customize their communications completely:
+- **Send from your email address** - Customers see your brand, not Journey's
+- **Use your support email** - Replies go directly to your support team
+- **Choose your email provider** - Use your preferred email service provider (e.g., Postmark, SendGrid)
+- **Choose your SMS provider** - Use your preferred SMS provider (e.g., Twilio, Plivo)
+- **Private message logs** - All communications are kept separate and private to your account
 
-## Multi-Tenant Support
+### Example
 
-Journey's communication system is fully multi-tenant aware.
+**Store A** sends emails from `hello@storea.com` and uses their own email service.
 
-### Tenant Isolation
+**Store B** sends emails from `hi@storeb.com` and uses a different email service.
 
-Each merchant has:
-- Isolated event configurations
-- Separate message templates
-- Independent provider credentials
-- Private message logs
+Both operate independently in Journey—each managing their own communications, templates, and customer data without any overlap.
 
-```python
-# Communications run in tenant context
-with schema_context(tenant.schema_name):
-    event_handler(...)
-```
-
-### Per-Tenant Configuration
-
-<CodeGroup>
-
-```python Merchant A
-{
-  "name": "Store A",
-  "from_email": "hello@storea.com",
-  "reply_to_email": "support@storea.com",
-  "bcc_email": "orders@storea.com",
-  "email_provider": postmark_provider_a,
-  "sms_provider": twilio,
-  "dunning_settling_attempts": 20
-}
-```
-
-```python Merchant B
-{
-  "name": "Store B",
-  "from_email": "hi@storeb.com",
-  "reply_to_email": "help@storeb.com",
-  "bcc_email": "admin@storeb.com",
-  "email_provider": postmark_provider_b,
-  "sms_provider": nova,
-  "dunning_settling_attempts": 15
-}
-```
-
-</CodeGroup>
-
-### Automated Processing
-
-```python
-# Cron jobs process all tenants
-for tenant in Tenant.objects.all():
-    with tenant_context(tenant):
-        process_scheduled_events()
-```
-
-## Best Practices
-
-<AccordionGroup>
-  <Accordion title="Always Provide Plain Text Versions" icon="file-lines">
-    Email clients like Gmail may strip HTML or display it poorly. Always include a `content_text` version for accessibility and deliverability.
-  </Accordion>
-
-  <Accordion title="Use Template Variables Consistently" icon="brackets-curly">
-    Don't hardcode customer data. Use `{{ customer_object.full_name }}` instead of "John" to ensure personalization works across all customers.
-  </Accordion>
-
-  <Accordion title="Keep SMS Under 160 Characters" icon="mobile">
-    Messages over 160 characters split into multiple SMS, increasing costs. Use abbreviations and short URLs.
-  </Accordion>
-
-  <Accordion title="Monitor Failed Messages" icon="triangle-exclamation">
-    Set up alerts for failed message rates above 5%. High failure rates indicate provider issues or invalid contact data.
-  </Accordion>
-
-  <Accordion title="Respect Frequency Limits" icon="clock">
-    Don't over-communicate. Recommended maximums: transactional messages per transaction, delivery reminders 1-2 per delivery, marketing 1-2 per week.
-  </Accordion>
-
-  <Accordion title="Include Unsubscribe for Marketing" icon="ban">
-    For promotional messages, include clear unsubscribe links to comply with email regulations (CAN-SPAM, GDPR).
-  </Accordion>
-
-  <Accordion title="Test Across Email Clients" icon="envelope">
-    Test templates in Gmail, Outlook, Apple Mail, and mobile clients to ensure consistent rendering.
-  </Accordion>
-
-  <Accordion title="Use Meaningful Event Handles" icon="tag">
-    Name events clearly: `delivery_reminder_2d` is better than `event_123`. This aids debugging and maintenance.
-  </Accordion>
-</AccordionGroup>
-
-## API Reference
-
-### Event Handler Function
-
-```python
-event_handler(
-    context: dict,                    # Template variables
-    event_handle: str = None,         # Event identifier
-    delivery_object: Delivery = None, # Auto-populates context
-    merchant_object: Merchant = None, # Merchant config
-    schema_name: str = None,          # Multi-tenant schema
-    event_object: Event = None        # Direct event reference
-)
-```
-
-**Parameters:**
-- `context` - Dictionary of variables available to templates
-- `event_handle` - String identifier from `EventHandles` enum
-- `delivery_object` - Optional delivery for automatic context enrichment
-- `merchant_object` - Merchant configuration (auto-detected if not provided)
-- `schema_name` - Tenant schema (auto-detected if not provided)
-- `event_object` - Alternative to `event_handle` for direct reference
-
-**Returns:** `HttpResponse` with provider response
-
-**Example:**
-```python
-from apps.communication.views import event_handler
-
-event_handler(
-    context={
-        'customer_object': customer,
-        'custom_message': 'Welcome aboard!'
-    },
-    event_handle='welcome_email'
-)
-```
-
-### EventHandles Enum
-
-```python
-class EventHandles:
-    # Authentication
-    USER_REQUESTS_LOGIN_CODE
-    USER_REQUESTS_LOGIN_CODE_EMAIL
-
-    # Payments
-    SUBSCRIPTION_PAYMENT_SUCCESSFULLY_AUTHORIZED
-    ONEOFF_PAYMENT_SUCCESSFULLY_AUTHORIZED
-    INVOICE_SENT_AUTOMATICALLY
-
-    # Delivery
-    DELIVERY_COMPLETE_THROUGH_ROUTE_PLANNER
-    DRIVER_STARTS_A_ROUTE
-    INFORM_FUTURE_EVENT
-
-    # Dunning
-    SUBSCRIPTION_STATUS_SET_TO_PAST_DUE_FOR_THE_FIRST_TIME
-    SUBSCRIPTION_STATUS_SET_TO_ERROR_FOR_THE_FIRST_TIME
-    SUBSCRIPTION_STATUS_SET_TO_EXPIRED
-    SUBSCRIPTION_STATUS_STILL_ON_ERROR_EVERY_FOURTH_TIME
-```
+<Info>
+White-label communications mean your customers see only your brand in every message they receive. They never know Journey is powering the platform behind the scenes.
+</Info>
 
 ## Common Use Cases
 
 ### Passwordless Authentication
 
-```python
-# SMS login code
-context = {
-    'login_code': '123456',
-    'customer_object': customer,
-    'merchant_object': merchant
-}
-event_handler(context, EventHandles.USER_REQUESTS_LOGIN_CODE)
+When a customer logs into My Pages, they receive an SMS or email with a one-time code. They enter the code to verify their identity—no password needed.
+
+**Example Message:**
+```
+Your Fresh Market login code: 847293
+This code expires in 10 minutes. Don't share it with anyone.
 ```
 
 ### Subscription Welcome Email
 
-```python
-# After successful payment
-event_handler(
-    context={
-        'customer_object': customer,
-        'subscription_object': subscription,
-        'product_variation_object': product,
-        'merchant_object': merchant
-    },
-    event_handle=EventHandles.SUBSCRIPTION_PAYMENT_SUCCESSFULLY_AUTHORIZED
-)
+After a customer's first payment processes successfully, they receive a welcome email with their subscription details, next delivery date, and how to manage their account on My Pages.
+
+**Example Message:**
+```
+Subject: Welcome to Your Fresh Market Subscription!
+
+Hi Sarah,
+
+Your subscription is active! Here's what to expect:
+
+📦 First Delivery: Thursday, December 12 at 6-8 PM
+Items: Organic Milk, Farmer's Eggs, Fresh Bread
+
+Manage your subscription anytime: https://yoursite.getjourney.io/me
+
+You can change frequencies, swap products, or pause anytime.
+
+Questions? Reply to this email or check our FAQ.
+
+Thanks for subscribing!
+The Fresh Market Team
 ```
 
 ### Delivery Tracking Updates
 
-```python
-# Driver en route notification
-event_handler(
-    context={
-        'driver_name': driver.name,
-        'delivery_window_start': '14:00',
-        'delivery_window_end': '16:00'
-    },
-    event_handle='driver_starts_route',
-    delivery_object=delivery
-)
+As a delivery gets closer, customers receive notifications with their delivery window. If the driver is nearby, they get a final update.
+
+**Example Messages:**
+```
+Your Fresh Market delivery arrives tomorrow, Dec 12, between 6-8 PM
+You can change your delivery before midnight on My PAges: https://yoursite.getjourney.io/me
+```
+
+Later that day:
+```
+Your package has been delivered!
+See your order on https://yoursite.getjourney.io/me
 ```
 
 ### Payment Failure Recovery
 
-```python
-# Automatic dunning email
-event_handler(
-    context={},  # Auto-populated from delivery
-    event_handle=EventHandles.SUBSCRIPTION_STATUS_SET_TO_PAST_DUE_FOR_THE_FIRST_TIME,
-    delivery_object=delivery,
-    merchant_object=merchant
-)
+If a payment fails, the customer automatically receives a message asking them to update their payment method on My Pages. This helps recover the failed subscription without losing the customer.
+
+**Example Message:**
 ```
+Your Fresh Market payment didn't go through. Your subscription is on hold.
 
-## API Endpoints
+Update your payment method: https://yoursite.getjourney.io/me
 
-<CardGroup cols={3}>
-  <Card title="List Events" icon="list" href="/api/communication/events/list">
-    Get all events
-  </Card>
-  <Card title="Create Event" icon="plus" href="/api/communication/events/create">
-    Create new event
-  </Card>
-  <Card title="Get Event" icon="eye" href="/api/communication/events/get">
-    Retrieve details
-  </Card>
-  <Card title="List Messages" icon="envelope" href="/api/communication/messages/list">
-    Get templates
-  </Card>
-  <Card title="Create Message" icon="pen" href="/api/communication/messages/create">
-    Create template
-  </Card>
-  <Card title="Message Logs" icon="clock-rotate-left" href="/api/communication/logs">
-    View send history
-  </Card>
-</CardGroup>
+Once updated, your next delivery will proceed normally.
+
+Questions? Contact us: support@freshmarket.com
+```
 
 ## Related Concepts
 
