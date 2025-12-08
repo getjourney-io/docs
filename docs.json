@@ -3,8 +3,8 @@
   "theme": "mint",
   "name": "Journey API Documentation",
   "colors": {
-    "primary": "#0EA5E9",
-    "light": "#38BDF8",
+    "primary": "#5e0499",
+    "light": "#ff00b7",
     "dark": "#0284C7"
   },
   "favicon": "/favicon.svg",
