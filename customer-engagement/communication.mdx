@@ -175,19 +175,19 @@ Journey includes intelligent dunning that automatically manages payment failure 
 
 ```mermaid
 graph TD
-    A[Day 1: Payment Fails] -->|friendly_reminder| B[Days 2-19: Silent Retries]
-    B -->|every_4th_attempt| C[Day 4, 8, 12, 16: Urgent Reminders]
+    A[Day 1: Payment Fails] -->|Friendly reminder| B[Days 2-19: Payment Retries]
+    B -->|Every 4th attempt| C[Day 4, 8, 12, 16: Urgent Reminders]
     C --> D[Day 20: Final Notice]
     D --> E[Day 21: Subscription Cancelled]
 
-    B -.->|payment_succeeds| F[Back to Active]
-    C -.->|customer_updates_card| F
+    B -.->|Payment succeeds| F[Back to Active]
+    C -.->|Customer updates card| F
 ```
 
 ### Dunning Events
 
 <AccordionGroup>
-  <Accordion title="past_due_first_time" icon="circle-exclamation">
+  <Accordion title="Past due first time" icon="circle-exclamation">
     **Trigger:** First payment failure (Day 1)
 
     **Tone:** Friendly and informative
@@ -204,7 +204,7 @@ graph TD
     ```
   </Accordion>
 
-  <Accordion title="still_on_error_every_fourth" icon="triangle-exclamation">
+  <Accordion title="Still on error every fourth" icon="triangle-exclamation">
     **Trigger:** Every 4th retry attempt (Days 4, 8, 12, 16)
 
     **Tone:** More urgent with each iteration
@@ -222,7 +222,7 @@ graph TD
     ```
   </Accordion>
 
-  <Accordion title="error_first_time" icon="xmark">
+  <Accordion title="Error first time" icon="xmark">
     **Trigger:** Max retries reached (Day 20)
 
     **Tone:** Final warning, clear consequences
@@ -240,7 +240,7 @@ graph TD
     ```
   </Accordion>
 
-  <Accordion title="subscription_expired" icon="ban">
+  <Accordion title="Subscription expired" icon="ban">
     **Trigger:** Subscription cancelled (Day 21)
 
     **Tone:** Professional, offer to reactivate

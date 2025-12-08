@@ -52,11 +52,6 @@
     "global": {
       "anchors": [
         {
-          "anchor": "API Status",
-          "href": "https://status.journey.io",
-          "icon": "signal"
-        },
-        {
           "anchor": "Support",
           "href": "mailto:hello@getjourney.io",
           "icon": "envelope"
@@ -65,20 +60,14 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/journey-light.svg",
+    "dark": "/logo/journey-dark.svg"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Dashboard",
-        "href": "https://dashboard.journey.io"
-      }
-    ],
     "primary": {
       "type": "button",
-      "label": "Get API Key",
-      "href": "https://dashboard.journey.io/settings/api-keys"
+      "label": "Get Started",
+      "href": "https://journey.club/signup"
     }
   },
   "contextual": {
