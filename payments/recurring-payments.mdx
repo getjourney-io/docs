@@ -88,15 +88,19 @@ graph LR
   </Accordion>
 
   <Accordion title="Authorized" icon="lock">
-    Payment method has been authorized (pre-authorized) but funds not yet captured. Common with payment processor flows.
+    The payment method has been verified and funds are **reserved**, but no money has actually been transferred yet.
 
-    **Next Step:** Capture funds when delivery ships or billing date arrives
+    **What's happening:** The payment processor confirms the customer has enough funds available, and those funds are temporarily set aside and unavailable to the customer for other purchases.
+
+    **Next Step:** Funds will be captured (actually transferred) when the delivery ships or billing date arrives. Most payments move from Authorized to Settled within a few days.
   </Accordion>
 
   <Accordion title="Settled" icon="circle-check">
-    Money successfully captured and transferred. This is the successful end state.
+    Money has been **actually transferred** from the customer's account to yours. This is the final successful state.
 
-    **Effect:** Subscription remains/returns to active status
+    **What happened:** The authorized funds were captured, processed through the banking system, and are now in your merchant account. You have the revenue.
+
+    **Effect:** Subscription remains/returns to active status, and you can rely on having received the payment
   </Accordion>
 
   <Accordion title="Failed" icon="circle-xmark">
@@ -228,11 +232,11 @@ The system checks for a processor in this order:
 You can have multiple payment processors active at the same time. For example, use Straumur for Icelandic customers and Reepay for international customers within the same merchant account.
 </Info>
 
-## Automated Billing Cron
+## Automated Billing Process
 
 Journey runs daily billing automation to handle recurring payment processing automatically.
 
-### Cron Job Workflow
+### Daily Billing Workflow
 
 The system performs several key operations each day:
 
