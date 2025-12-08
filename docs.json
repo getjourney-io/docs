@@ -4,8 +4,8 @@
   "name": "Journey API Documentation",
   "colors": {
     "primary": "#5e0499",
-    "light": "#ff00b7",
-    "dark": "#5e0499"
+    "light": "#e099ff",
+    "dark": "#2d004d"
   },
   "favicon": "/favicon.svg",
   "navigation": {
