@@ -4,8 +4,8 @@
   "name": "Journey API Documentation",
   "colors": {
     "primary": "#5e0499",
-    "light": "#ff00b7",
-    "dark": "#0284C7"
+    "light": "#e099ff",
+    "dark": "#2d004d"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -60,8 +60,8 @@
     }
   },
   "logo": {
-    "light": "/logo/journey-light.svg",
-    "dark": "/logo/journey-dark.svg"
+    "light": "/logo/journey-light-big.svg",
+    "dark": "/logo/journey-dark-big.svg"
   },
   "navbar": {
     "primary": {
